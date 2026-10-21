@@ -273,14 +273,42 @@ if (!db) {
   message("Supabase configured nahi hai. supabase.js mein URL aur publishable key check karo.", true);
 } else {
   $("login-form").addEventListener("submit", async event => {
-    event.preventDefault();
-    message("Logging in...");
+  event.preventDefault();
+  message("Logging in...");
 
+  try {
     const { error } = await db.auth.signInWithPassword({
       email: $("email").value.trim(),
       password: $("password").value
     });
 
+    if (error) throw error;
+
+    const { data: { user }, error: userError } =
+      await db.auth.getUser();
+
+    if (userError) throw userError;
+    if (!user) throw new Error("User verify nahi hua.");
+
+    const { data: admin, error: adminError } = await db
+      .from("admins")
+      .select("user_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (adminError) throw adminError;
+
+    if (!admin) {
+      throw new Error("Admin record nahi mila: " + user.id);
+    }
+
+    showDashboard();
+    await refreshAll();
+
+  } catch (error) {
+    message("Login error: " + (error.message || "Unknown error"), true);
+  }
+});
     if (error) {
       message(error.message, true);
       return;
