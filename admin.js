@@ -392,3 +392,65 @@ if (!db) {
     }
   });
 }
+async function loadPaymentSettings() {
+  const { data, error } = await db
+    .from("settings")
+    .select("key, value")
+    .in("key", [
+      "easypaisa_title",
+      "easypaisa_number",
+      "advance_instructions"
+    ]);
+
+  if (error) throw error;
+
+  const settings = Object.fromEntries(
+    (data || []).map(item => [item.key, item.value])
+  );
+
+  $("easypaisa-title").value = settings.easypaisa_title || "";
+  $("easypaisa-number").value = settings.easypaisa_number || "";
+  $("advance-instructions").value =
+    settings.advance_instructions || "";
+}
+
+async function savePaymentSettings() {
+  const msg = $("payment-settings-message");
+  msg.textContent = "Saving...";
+
+  try {
+    const items = [
+      {
+        key: "easypaisa_title",
+        value: $("easypaisa-title").value.trim()
+      },
+      {
+        key: "easypaisa_number",
+        value: $("easypaisa-number").value.trim()
+      },
+      {
+        key: "advance_instructions",
+        value: $("advance-instructions").value.trim()
+      }
+    ];
+
+    for (const item of items) {
+      const { error } = await db
+        .from("settings")
+        .upsert(item, { onConflict: "key" });
+
+      if (error) throw error;
+    }
+
+    msg.textContent = "Settings saved successfully!";
+  } catch (error) {
+    msg.textContent = "Error: " + error.message;
+  }
+}
+
+if (db) {
+  $("save-payment-settings").addEventListener(
+    "click",
+    savePaymentSettings
+  );
+}
