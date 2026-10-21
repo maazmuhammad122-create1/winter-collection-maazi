@@ -532,10 +532,38 @@
         <p class="muted">See customer feedback and ratings.</p>
 
         <div id="review-list" class="empty">
-          Customer reviews will appear here once connected to your database.
+          Customer reviews will appear here once connected to your database.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
         </div>
       </section>
+<!-- Reviews section pehle se hai -->
+      <section class="panel">
+        <h2>Customer Reviews</h2>
+        <div id="review-list"></div>
+      </section>
 
+      <!-- YAHAN EASYPaisa SETTINGS KA CODE PASTE KARO -->
+      <section class="panel" id="payment-settings">
+        <h2>Easypaisa Payment Settings</h2>
+
+        <label for="easypaisa-title">Account Title</label>
+        <input id="easypaisa-title" type="text"
+               placeholder="Registered account name">
+
+        <label for="easypaisa-number">Easypaisa Number</label>
+        <input id="easypaisa-number" type="tel"
+               placeholder="03XXXXXXXXX">
+
+        <label for="advance-instructions">Payment Instructions</label>
+        <textarea id="advance-instructions"
+                  placeholder="Payment instructions"></textarea>
+
+        <button id="save-payment-settings" type="button">
+          SAVE PAYMENT SETTINGS
+        </button>
+        <p id="payment-settings-message" role="status"></p>
+      </section>
+
+    <!-- Dashboard ka closing tag iske baad hai -->
       <p id="message" role="status" aria-live="polite"></p>
     </section>
   </main>
