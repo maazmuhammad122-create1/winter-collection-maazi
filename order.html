@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090909">
+  <title>Place Order | Winter Collection by Maazi</title>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;background:#090909;color:#f7f0df;font-family:Arial,sans-serif}
+    header{text-align:center;padding:24px 12px;border-bottom:1px solid #b89548}
+    h1,h2{color:#d8b76a;font-family:Georgia,serif}
+    header p{color:#c5bda9}
+    main{max-width:650px;margin:25px auto;padding:18px}
+    .panel{background:#141414;border:1px solid #554522;border-radius:12px;padding:20px;margin-bottom:20px}
+    label{display:block;margin:15px 0 7px;color:#e4c477}
+    input,textarea,select{width:100%;padding:13px;background:#090909;color:white;border:1px solid #6d592e;border-radius:7px;font-size:16px}
+    textarea{min-height:85px;resize:vertical}
+    .option{display:flex;gap:10px;align-items:center;margin:12px 0}
+    .option input{width:auto}
+    .option label{margin:0;color:#f7f0df}
+    button,.btn{display:block;width:100%;padding:14px;margin-top:16px;background:#c6a354;color:#090909;border:0;border-radius:7px;font-weight:bold;text-align:center;text-decoration:none;cursor:pointer}
+    .price{color:#e4c477;font-weight:bold}
+    .muted{color:#c5bda9;font-size:14px;line-height:1.6}
+    #advance-fields{display:none}
+    #snow{position:fixed;inset:0;pointer-events:none;z-index:5;overflow:hidden}
+    .flake{position:absolute;top:-15px;color:white;animation:fall linear infinite;opacity:.55}
+    @keyframes fall{to{transform:translateY(110vh) rotate(360deg)}}
+    footer{text-align:center;padding:25px;color:#c5bda9}
+  </style>
+</head>
+<body>
+  <div id="snow"></div>
+  <header>
+    <h1>WINTER COLLECTION</h1>
+    <p>BY MAAZI · WINTER 2026</p>
+  </header>
+
+  <main>
+    <section class="panel">
+      <h2>Place Your Order</h2>
+      <p class="muted">Apni details carefully enter karein. Order submit karne ke baad confirmation ka intezar karein.</p>
+      <p id="product-summary">Your selected product will appear here.</p>
+      <p id="total-display" class="price">Total: PKR 0</p>
+    </section>
+
+    <form id="order-form">
+      <section class="panel">
+        <h2>Customer Details</h2>
+
+        <label for="customer_name">Full Name *</label>
+        <input id="customer_name" required maxlength="100" autocomplete="name">
+
+        <label for="phone">Phone / WhatsApp *</label>
+        <input id="phone" required type="tel" maxlength="25" autocomplete="tel">
+
+        <label for="city">City *</label>
+        <input id="city" required maxlength="100" autocomplete="address-level2">
+
+        <label for="address">Complete Delivery Address *</label>
+        <textarea id="address" required maxlength="1000" autocomplete="street-address"></textarea>
+
+        <label for="product_id">Product *</label>
+        <select id="product_id" required>
+          <option value="">Loading products...</option>
+        </select>
+
+        <label for="variant_id">Size / Colour *</label>
+        <select id="variant_id" required>
+          <option value="">Select a product first</option>
+        </select>
+
+        <label for="qty">Quantity *</label>
+        <input id="qty" type="number" min="1" max="20" value="1" required>
+      </section>
+
+      <section class="panel">
+        <h2>Payment Method</h2>
+
+        <div class="option">
+          <input id="cod" type="radio" name="payment_method" value="COD" checked>
+          <label for="cod">Cash on Delivery (COD)</label>
+        </div>
+
+        <div class="option">
+          <input id="advance" type="radio" name="payment_method" value="ADVANCE">
+          <label for="advance">Advance Payment</label>
+        </div>
+
+        <div id="advance-fields">
+          <label for="advance_amount">Advance Amount (PKR) *</label>
+          <input id="advance_amount" type="number" min="1" step="1">
+
+          <p class="muted">Payment instructions aur official payment account details store ki taraf se yahan add ki jayengi. Payment sirf verified official account par karein.</p>
+
+          <label for="transaction_id">Transaction ID *</label>
+          <input id="transaction_id" maxlength="150">
+
+          <label for="payment_proof">Payment Screenshot / Proof *</label>
+          <input id="payment_proof" type="file" accept="image/jpeg,image/png,image/webp">
+          <p class="muted">Payment proof submit karna payment ki verification ki guarantee nahi hai. Store payment verify karega.</p>
+        </div>
+
+        <p id="balance-display" class="price">Balance Due: PKR 0</p>
+        <button type="submit" id="submit-btn">SUBMIT ORDER</button>
+        <p id="form-message" role="status" class="muted"></p>
+      </section>
+    </form>
+  </main>
+
+  <footer>Winter Collection by Maazi · Order support available on WhatsApp.</footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
+  <script src="order.js"></script>
+  <script>
+    const snow = document.getElementById("snow");
+    for(let i=0;i<35;i++){
+      const f=document.createElement("span");
+      f.className="flake";
+      f.textContent="❄";
+      f.style.left=Math.random()*100+"%";
+      f.style.animationDuration=(5+Math.random()*8)+"s";
+      f.style.animationDelay=(-Math.random()*12)+"s";
+      f.style.fontSize=(8+Math.random()*12)+"px";
+      snow.appendChild(f);
+    }
+
+    document.querySelectorAll('input[name="payment_method"]').forEach(radio=>{
+      radio.addEventListener("change",()=>{
+        document.getElementById("advance-fields").style.display =
+          document.getElementById("advance").checked ? "block" : "none";
+      });
+    });
+  </script>
+</body>
+</html>
