@@ -87,11 +87,19 @@
           <label for="advance">Advance Payment</label>
         </div>
 
-        <div id="advance-fields">
+        <div >
           <label for="advance_amount">Advance Amount (PKR) *</label>
           <input id="advance_amount" type="number" min="1" step="1">
 
-          <p class="muted">Payment instructions aur official payment account details store ki taraf se yahan add ki jayengi. Payment sirf verified official account par karein.</p>
+           <div id="easypaisa-details" class="muted">
+  <h3>Easypaisa Advance Payment</h3>
+  <p>Account Title: <strong id="easypaisa-account-title">Loading...</strong></p>
+  <p>Account Number: <strong id="easypaisa-account-number">Loading...</strong></p>
+  <p id="easypaisa-payment-instructions">
+    Payment instructions yahan show hongi.
+  </p>
+  <p>Payment karne ke baad Transaction ID aur payment screenshot submit karein.</p>
+</div>
 
           <label for="transaction_id">Transaction ID *</label>
           <input id="transaction_id" maxlength="150">
@@ -128,7 +136,7 @@
 
     document.querySelectorAll('input[name="payment_method"]').forEach(radio=>{
       radio.addEventListener("change",()=>{
-        document.getElementById("advance-fields").style.display =
+        document.getElementById().style.display =
           document.getElementById("advance").checked ? "block" : "none";
       });
     });
