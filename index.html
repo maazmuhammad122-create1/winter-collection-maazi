@@ -2,234 +2,441 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#090909">
+  <meta name="description" content="Shop Winter Collection by Maazi.">
   <title>Winter Collection by Maazi</title>
+
   <style>
-    *{box-sizing:border-box}
-    body{margin:0;background:#090909;color:#f7f0df;font-family:Arial,sans-serif}
-    header{text-align:center;padding:28px 15px;border-bottom:1px solid #b89548}
-    h1{color:#d8b76a;font-family:Georgia,serif;letter-spacing:1px}
-    header p{color:#c5bda9}
-    .hero{text-align:center;padding:55px 18px;background:linear-gradient(145deg,#171717,#090909)}
-    .hero h2{font-size:32px;color:#e4c477}
-    .hero p{color:#ddd}
-    .products{padding:24px 16px;max-width:1100px;margin:auto}
-    .search{width:100%;padding:14px;border:1px solid #b89548;background:#161616;color:white;border-radius:8px}
-    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:20px}
-    .card{border:1px solid #554522;border-radius:10px;overflow:hidden;background:#141414}
-    .gallery{display:flex;flex-direction:column;gap:4px}
-    .gallery img{display:block;width:100%;height:auto;max-height:360px;object-fit:contain;background:#111}
-    .placeholder{min-height:160px;display:grid;place-items:center;background:linear-gradient(145deg,#27231a,#111);color:#d8b76a}
-    .info{padding:12px}
-    .info h3{margin:4px 0 10px}
-    .price{color:#e4c477;font-weight:bold}
-    button,.order{display:block;width:100%;padding:12px;margin-top:12px;background:#c6a354;color:#090909;border:0;border-radius:6px;font-weight:bold;text-decoration:none;text-align:center;cursor:pointer}
-    button:disabled{opacity:.5;cursor:not-allowed}
-    #snow{position:fixed;inset:0;pointer-events:none;z-index:5;overflow:hidden}
-    .flake{position:absolute;top:-15px;color:white;animation:fall linear infinite;opacity:.65}
-    @keyframes fall{to{transform:translateY(110vh) rotate(360deg)}}
-    footer{text-align:center;padding:30px;color:#c5bda9}
-    @media(min-width:700px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}.placeholder{min-height:220px}}
+    :root {
+      --bg: #090909;
+      --panel: #141414;
+      --gold: #d8b76a;
+      --gold-dark: #9b7935;
+      --text: #f7f0df;
+      --muted: #bdb5a3;
+      --border: #44371f;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, sans-serif;
+    }
+
+    a { color: inherit; }
+
+    .site-header {
+      text-align: center;
+      padding: 30px 16px 24px;
+      border-bottom: 1px solid var(--gold-dark);
+      background: linear-gradient(180deg, #17140d, #090909);
+    }
+
+    .brand {
+      margin: 0;
+      color: var(--gold);
+      font-family: Georgia, serif;
+      font-size: clamp(27px, 6vw, 42px);
+      letter-spacing: 2px;
+    }
+
+    .tagline {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 3px;
+    }
+
+    .hero {
+      max-width: 1200px;
+      margin: auto;
+      padding: 30px 18px 18px;
+      text-align: center;
+    }
+
+    .hero h2 {
+      margin: 0 0 10px;
+      color: var(--gold);
+      font: 26px Georgia, serif;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    .toolbar {
+      max-width: 1200px;
+      margin: 18px auto 26px;
+      padding: 0 18px;
+    }
+
+    #search {
+      display: block;
+      width: 100%;
+      max-width: 460px;
+      margin: auto;
+      padding: 14px 16px;
+      border: 1px solid var(--gold-dark);
+      border-radius: 8px;
+      background: #111;
+      color: var(--text);
+      font-size: 16px;
+      outline: none;
+    }
+
+    #search:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 2px #d8b76a20;
+    }
+
+    #status-message {
+      max-width: 1200px;
+      margin: 0 auto 18px;
+      padding: 0 18px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 22px;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 18px 40px;
+    }
+
+    .product-card {
+      min-width: 0;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      background: var(--panel);
+      box-shadow: 0 8px 28px #0005;
+      transition: border-color .2s, transform .2s;
+    }
+
+    .product-card:hover {
+      border-color: var(--gold-dark);
+      transform: translateY(-3px);
+    }
+
+    .product-gallery {
+      position: relative;
+      overflow: hidden;
+      background: #101010;
+      border-bottom: 1px solid var(--border);
+      aspect-ratio: 4 / 5;
+      touch-action: pan-y;
+    }
+
+    .gallery-track {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+      overscroll-behavior-x: contain;
+    }
+
+    .gallery-track::-webkit-scrollbar { display: none; }
+
+    .gallery-slide {
+      flex: 0 0 100%;
+      width: 100%;
+      height: 100%;
+      scroll-snap-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #101010;
+    }
+
+    .gallery-slide img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    .gallery-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 42px;
+      padding: 0;
+      margin: 0;
+      border: 1px solid #d8b76a70;
+      border-radius: 6px;
+      background: #090909bd;
+      color: var(--gold);
+      font-size: 25px;
+      cursor: pointer;
+      z-index: 2;
+    }
+
+    .gallery-prev { left: 9px; }
+    .gallery-next { right: 9px; }
+
+    .gallery-dots {
+      position: absolute;
+      bottom: 12px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 7px;
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .gallery-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #bdb5a3a0;
+      border: 0;
+      padding: 0;
+      margin: 0;
+    }
+
+    .gallery-dot.active {
+      width: 19px;
+      border-radius: 5px;
+      background: var(--gold);
+    }
+
+    .image-count {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 2;
+      padding: 5px 8px;
+      border: 1px solid #d8b76a60;
+      border-radius: 20px;
+      background: #090909bd;
+      color: var(--text);
+      font-size: 11px;
+    }
+
+    .product-info { padding: 16px; }
+
+    .product-name {
+      margin: 0 0 9px;
+      color: var(--text);
+      font-size: 17px;
+      line-height: 1.4;
+      overflow-wrap: anywhere;
+    }
+
+    .product-description {
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+      overflow-wrap: anywhere;
+    }
+
+    .product-price {
+      margin: 0 0 13px;
+      color: var(--gold);
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .size-heading {
+      margin: 0 0 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .size-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-bottom: 15px;
+    }
+
+    .size-chip {
+      padding: 7px 10px;
+      border: 1px solid #6d592e;
+      border-radius: 5px;
+      color: var(--text);
+      font-size: 12px;
+    }
+
+    .size-chip.unavailable { color: #9d9585; }
+
+    .order-btn {
+      display: block;
+      width: 100%;
+      padding: 13px 12px;
+      margin: 0;
+      border: 1px solid var(--gold);
+      border-radius: 7px;
+      background: var(--gold);
+      color: #090909;
+      font-size: 13px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background .2s, color .2s;
+    }
+
+    .order-btn:hover {
+      background: transparent;
+      color: var(--gold);
+    }
+
+    .order-btn.disabled {
+      opacity: .55;
+      pointer-events: none;
+    }
+
+    .empty-state {
+      grid-column: 1 / -1;
+      padding: 35px 15px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.7;
+    }
+
+    footer {
+      padding: 25px 15px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      text-align: center;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    #snow {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .flake {
+      position: absolute;
+      top: -15px;
+      color: white;
+      opacity: .4;
+      animation: fall linear infinite;
+    }
+
+    @keyframes fall {
+      to { transform: translateY(110vh) rotate(360deg); }
+    }
+
+    @media (max-width: 850px) {
+      .product-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        padding-right: 12px;
+        padding-left: 12px;
+      }
+
+      .product-info { padding: 12px; }
+      .product-name { font-size: 15px; }
+      .product-price { font-size: 18px; }
+    }
+
+    @media (max-width: 480px) {
+      .site-header { padding: 25px 10px 20px; }
+      .tagline { font-size: 10px; letter-spacing: 2px; }
+      .hero { padding-top: 25px; }
+      .hero h2 { font-size: 23px; }
+      .product-grid { gap: 10px; }
+      .product-info { padding: 10px; }
+      .product-name { font-size: 14px; }
+      .product-description { font-size: 12px; }
+      .product-price { font-size: 16px; }
+      .size-chip { padding: 6px 7px; font-size: 11px; }
+      .order-btn { padding: 12px 5px; font-size: 11px; }
+      .gallery-arrow { width: 28px; height: 36px; }
+    }
   </style>
 </head>
+
 <body>
-  <div id="snow"></div>
-  <header>
-    <h1>WINTER COLLECTION</h1>
-    <p>BY MAAZI · WINTER 2026</p>
+  <div id="snow" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <h1 class="brand">WINTER COLLECTION</h1>
+    <p class="tagline">BY MAAZI · WINTER 2026</p>
   </header>
+
   <section class="hero">
-    <h2>Winter, In Style.</h2>
-    <p>Discover your next winter favourite.</p>
-    <a class="order" style="max-width:180px;margin:20px auto" href="#products">SHOP NOW</a>
+    <h2>Discover Your Style</h2>
+    <p>Explore our collection. Swipe through product pictures to see more details.</p>
   </section>
-  <main class="products" id="products">
-    <h2>Our Collection</h2>
-    <input class="search" id="search" placeholder="Search products..." aria-label="Search products">
-    <div class="grid" id="grid">
-      <p>Loading products...</p>
-    </div>
+
+  <div class="toolbar">
+    <input
+      id="search"
+      type="search"
+      placeholder="Search products..."
+      aria-label="Search products"
+      autocomplete="off"
+    >
+  </div>
+
+  <p id="status-message" role="status" aria-live="polite">
+    Loading your collection...
+  </p>
+
+  <main>
+    <section id="grid" class="product-grid" aria-label="Products"></section>
   </main>
-  <footer>Winter Collection by Maazi · Contact us for help with your order.</footer>
+
+  <footer>
+    Winter Collection by Maazi<br>
+    Quality · Style · Winter Essentials
+  </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase.js"></script>
+  <script src="app.js"></script>
+
   <script>
-    const grid = document.getElementById("grid");
-    const search = document.getElementById("search");
-    let products = [];
-
-    function make(tag, className, text) {
-      const el = document.createElement(tag);
-      if (className) el.className = className;
-      if (text !== undefined) el.textContent = text;
-      return el;
-    }
-
-    function getImages(images) {
-      if (!images) return [];
-      if (typeof images === "string") {
-        try { images = JSON.parse(images); }
-        catch { return images.startsWith("http") ? [images] : []; }
-      }
-      if (!Array.isArray(images)) return [];
-      return images.map(item => {
-        if (typeof item === "string") return item;
-        if (item && typeof item.url === "string") return item.url;
-        return "";
-      }).filter(url => url.startsWith("https://") || url.startsWith("http://"));
-    }
-
-    function render(list) {
-      grid.replaceChildren();
-
-      if (!list.length) {
-        grid.append(make("p", "", "No active products found."));
-        return;
-      }
-
-      list.forEach(product => {
-        const card = make("article", "card");
-        const gallery = make("div", "gallery");
-
-        if (product.photos.length) {
-          product.photos.forEach(url => {
-            const img = make("img");
-            img.src = url;
-            img.alt = product.name;
-            img.loading = "lazy";
-            gallery.append(img);
-          });
-        } else {
-          gallery.append(make("div", "placeholder", "WINTER COLLECTION"));
-        }
-
-        const info = make("div", "info");
-        info.append(make("h3", "", product.name));
-        info.append(make("div", "price", "PKR " + product.price.toLocaleString()));
-
-        if (product.description) {
-          info.append(make("p", "", product.description));
-        }
-
-        const sizes = make("select");
-        sizes.setAttribute("aria-label", "Select size for " + product.name);
-        product.sizes.forEach(size => {
-          sizes.append(make("option", "", size));
-          sizes.lastChild.value = size;
-        });
-
-        if (!product.sizes.length) {
-          const option = make("option", "", "Size unavailable");
-          option.value = "";
-          option.disabled = true;
-          option.selected = true;
-          sizes.append(option);
-          sizes.disabled = true;
-        }
-
-        const sizeLabel = make("label", "", "Select size");
-        sizeLabel.append(sizes);
-        sizeLabel.style.display = "grid";
-        sizeLabel.style.gap = "8px";
-        sizeLabel.style.marginTop = "12px";
-        info.append(sizeLabel);
-
-        const btn = make("button", "", "ORDER NOW");
-        btn.type = "button";
-        btn.disabled = !product.sizes.length;
-        btn.onclick = () => {
-          if (!sizes.value) return;
-          const query = new URLSearchParams({
-            product: product.name,
-            size: sizes.value
-          });
-          window.location.href = "order.html?" + query.toString();
-        };
-
-        info.append(btn);
-        card.append(gallery, info);
-        grid.append(card);
-      });
-    }
-
-    async function loadProducts() {
-      const db = window.maaziSupabase;
-
-      if (!db) {
-        grid.replaceChildren(make("p", "", "Store connection unavailable. Please check Supabase setup."));
-        return;
-      }
-
-      grid.replaceChildren(make("p", "", "Loading products..."));
-
-      try {
-        const { data, error } = await db
-          .from("products")
-          .select("id, name, price, description, images, is_active, created_at")
-          .order("created_at", { ascending: false });
-
-        if (error) throw error;
-
-        const active = (data || []).filter(p => p.is_active !== false);
-        let variantMap = {};
-
-        if (active.length) {
-          const { data: variants, error: variantError } = await db
-            .from("product_variants")
-            .select("product_id, size, stock")
-            .in("product_id", active.map(p => p.id));
-
-          if (variantError) {
-            console.error("Size loading error:", variantError);
-          } else {
-            (variants || []).forEach(v => {
-              const size = String(v.size || "").trim();
-              if (size && Number(v.stock) > 0) {
-                if (!variantMap[v.product_id]) variantMap[v.product_id] = [];
-                if (!variantMap[v.product_id].includes(size)) {
-                  variantMap[v.product_id].push(size);
-                }
-              }
-            });
-          }
-        }
-
-        products = active.map(p => ({
-          id: p.id,
-          name: p.name || "Winter Shirt",
-          price: Number(p.price) || 0,
-          description: p.description || "",
-          photos: getImages(p.images),
-          sizes: variantMap[p.id] || []
-        }));
-
-        render(products);
-      } catch (error) {
-        console.error("Store products error:", error);
-        grid.replaceChildren(make("p", "", "Products could not load. Please check the Supabase connection and policies."));
-      }
-    }
-
-    search.addEventListener("input", () => {
-      const term = search.value.trim().toLowerCase();
-      render(products.filter(p => p.name.toLowerCase().includes(term)));
-    });
-
     const snow = document.getElementById("snow");
-    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      for (let i = 0; i < 35; i++) {
-        const flake = make("span", "flake", "❄");
-        flake.style.left = Math.random() * 100 + "%";
-        flake.style.animationDuration = (5 + Math.random() * 8) + "s";
-        flake.style.animationDelay = (-Math.random() * 12) + "s";
-        flake.style.fontSize = (8 + Math.random() * 12) + "px";
-        snow.append(flake);
-      }
-    }
 
-    loadProducts();
+    for (let i = 0; i < 35; i++) {
+      const flake = document.createElement("span");
+      flake.className = "flake";
+      flake.textContent = "❄";
+      flake.style.left = Math.random() * 100 + "%";
+      flake.style.animationDuration = (5 + Math.random() * 8) + "s";
+      flake.style.animationDelay = (-Math.random() * 12) + "s";
+      flake.style.fontSize = (8 + Math.random() * 12) + "px";
+      snow.appendChild(flake);
+    }
   </script>
 </body>
 </html>
