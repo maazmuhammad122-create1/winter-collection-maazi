@@ -265,3 +265,38 @@ if (!db) {
     console.error(error);
   });
 }
+async function loadEasypaisaSettings() {
+  const titleEl = document.getElementById("easypaisa-account-title");
+  const numberEl = document.getElementById("easypaisa-account-number");
+  const instructionsEl = document.getElementById("easypaisa-payment-instructions");
+
+  try {
+    const { data, error } = await db
+      .from("settings")
+      .select("key, value")
+      .in("key", [
+        "easypaisa_title",
+        "easypaisa_number",
+        "advance_instructions"
+      ]);
+
+    if (error) throw error;
+
+    const settings = Object.fromEntries(
+      (data || []).map(item => [item.key, item.value])
+    );
+
+    titleEl.textContent = settings.easypaisa_title || "Account details will be updated soon";
+    numberEl.textContent = settings.easypaisa_number || "Not available yet";
+    instructionsEl.textContent = settings.advance_instructions || "Please contact the store before making payment.";
+  } catch (error) {
+    titleEl.textContent = "Temporarily unavailable";
+    numberEl.textContent = "Please contact the store";
+    instructionsEl.textContent = "Payment details could not be loaded.";
+    console.error("Easypaisa settings error:", error);
+  }
+}
+
+if (db) {
+  loadEasypaisaSettings();
+}
