@@ -15,8 +15,28 @@ let selectedVariant = null;
 function showMessage(message, error = false) {
   const el = $("form-message");
   if (!el) return;
-  el.textContent = message;
+
+  el.textContent = String(message ?? "");
   el.style.color = error ? "#ff8b8b" : "#e4c477";
+}
+
+function getErrorMessage(value) {
+  if (typeof value === "string") return value;
+
+  if (value instanceof Error) return value.message;
+
+  if (value && typeof value === "object") {
+    if (typeof value.message === "string") return value.message;
+    if (typeof value.error === "string") return value.error;
+
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return "Unknown error";
+    }
+  }
+
+  return "Order submit nahi ho saka. Dobara koshish karein.";
 }
 
 function formatPKR(amount) {
@@ -47,7 +67,9 @@ function updateTotal() {
     variantList.find(v => String(v.id) === $("variant_id").value) || null;
 
   const qty = Math.max(1, Number($("qty").value) || 1);
-  const total = selectedProduct ? Number(selectedProduct.price) * qty : 0;
+  const total = selectedProduct
+    ? Number(selectedProduct.price) * qty
+    : 0;
 
   $("total-display").textContent = "Total: " + formatPKR(total);
 
@@ -64,6 +86,7 @@ function updateTotal() {
 
   if (advanceMode) {
     advanceInput.max = String(total);
+
     if (Number(advanceInput.value) > total) {
       advanceInput.value = total || "";
     }
@@ -81,11 +104,14 @@ function updateTotal() {
 
 async function loadProducts() {
   const productSelect = $("product_id");
+
   productSelect.innerHTML =
     '<option value="">Loading products...</option>';
 
   if (!db) {
-    throw new Error("Supabase connection nahi mili. supabase.js check karein.");
+    throw new Error(
+      "Supabase connection nahi mili. supabase.js check karein."
+    );
   }
 
   const { data, error } = await db
@@ -96,6 +122,7 @@ async function loadProducts() {
   if (error) throw error;
 
   productList = data || [];
+
   productList.sort((a, b) =>
     String(a.name || "").localeCompare(String(b.name || ""))
   );
@@ -110,14 +137,23 @@ async function loadProducts() {
   const requestedId =
     new URLSearchParams(location.search).get("product");
 
-  if (requestedId && productList.some(p => String(p.id) === requestedId)) {
+  if (
+    requestedId &&
+    productList.some(p => String(p.id) === requestedId)
+  ) {
     productSelect.value = requestedId;
     await loadVariants(requestedId);
   } else {
     selectedProduct = null;
     selectedVariant = null;
     variantList = [];
-    setOptions($("variant_id"), "Select a product first", [], () => "");
+
+    setOptions(
+      $("variant_id"),
+      "Select a product first",
+      [],
+      () => ""
+    );
   }
 
   updateTotal();
@@ -135,12 +171,23 @@ async function loadVariants(productId) {
   variantList = [];
 
   if (!selectedProduct) {
-    setOptions($("variant_id"), "Select a product first", [], () => "");
+    setOptions(
+      $("variant_id"),
+      "Select a product first",
+      [],
+      () => ""
+    );
+
     updateTotal();
     return;
   }
 
-  setOptions($("variant_id"), "Loading sizes / colours...", [], () => "");
+  setOptions(
+    $("variant_id"),
+    "Loading sizes / colours...",
+    [],
+    () => ""
+  );
 
   const { data, error } = await db
     .from("product_variants")
@@ -155,13 +202,16 @@ async function loadVariants(productId) {
   variantList.sort((a, b) => {
     const sizeCompare =
       String(a.size || "").localeCompare(String(b.size || ""));
+
     return sizeCompare ||
       String(a.color || "").localeCompare(String(b.color || ""));
   });
 
   setOptions(
     $("variant_id"),
-    variantList.length ? "Choose size / colour" : "Currently out of stock",
+    variantList.length
+      ? "Choose size / colour"
+      : "Currently out of stock",
     variantList,
     v => {
       const label = [v.size, v.color].filter(Boolean).join(" / ");
@@ -172,7 +222,10 @@ async function loadVariants(productId) {
   updateTotal();
 
   if (!variantList.length) {
-    showMessage("Is product ka available size / colour nahi mila.", true);
+    showMessage(
+      "Is product ka available size / colour nahi mila.",
+      true
+    );
   } else {
     showMessage("");
   }
@@ -200,7 +253,8 @@ async function loadEasypaisaSettings() {
     );
 
     titleEl.textContent =
-      settings.easypaisa_title || "Account details will be updated soon";
+      settings.easypaisa_title ||
+      "Account details will be updated soon";
 
     numberEl.textContent =
       settings.easypaisa_number || "Not available yet";
@@ -210,9 +264,11 @@ async function loadEasypaisaSettings() {
       "Please contact the store before making payment.";
   } catch (error) {
     console.error("Easypaisa settings error:", error);
+
     titleEl.textContent = "Temporarily unavailable";
     numberEl.textContent = "Please contact the store";
-    instructionsEl.textContent = "Payment details could not be loaded.";
+    instructionsEl.textContent =
+      "Payment details could not be loaded.";
   }
 }
 
@@ -220,6 +276,7 @@ async function submitOrder(event) {
   event.preventDefault();
 
   const button = $("submit-btn");
+
   button.disabled = true;
   button.textContent = "PLEASE WAIT...";
 
@@ -237,13 +294,19 @@ async function submitOrder(event) {
     );
 
     const qty = Number($("qty").value);
+
     const paymentMethod = document.querySelector(
       'input[name="payment_method"]:checked'
     )?.value;
 
-    if (!product) throw new Error("Product select karein.");
+    if (!product) {
+      throw new Error("Product select karein.");
+    }
 
-    if (!variant || String(variant.product_id) !== String(product.id)) {
+    if (
+      !variant ||
+      String(variant.product_id) !== String(product.id)
+    ) {
       throw new Error("Available size / colour select karein.");
     }
 
@@ -253,7 +316,9 @@ async function submitOrder(event) {
       qty > 20 ||
       qty > Number(variant.stock)
     ) {
-      throw new Error("Quantity available stock ke mutabiq enter karein.");
+      throw new Error(
+        "Quantity available stock ke mutabiq enter karein."
+      );
     }
 
     if (!["COD", "ADVANCE"].includes(paymentMethod)) {
@@ -300,18 +365,28 @@ async function submitOrder(event) {
         throw new Error("Payment screenshot select karein.");
       }
 
-      if (!["image/jpeg", "image/png", "image/webp"].includes(proofFile.type)) {
-        throw new Error("Screenshot JPG, PNG ya WebP honi chahiye.");
+      if (
+        !["image/jpeg", "image/png", "image/webp"].includes(proofFile.type)
+      ) {
+        throw new Error(
+          "Screenshot JPG, PNG ya WebP honi chahiye."
+        );
       }
 
-      if (proofFile.size < 1 || proofFile.size > 5 * 1024 * 1024) {
-        throw new Error("Screenshot 5 MB se chhoti honi chahiye.");
+      if (
+        proofFile.size < 1 ||
+        proofFile.size > 5 * 1024 * 1024
+      ) {
+        throw new Error(
+          "Screenshot 5 MB se chhoti honi chahiye."
+        );
       }
     }
 
     showMessage("Order save ho raha hai...");
 
     const formData = new FormData();
+
     formData.append("customer_name", customerName);
     formData.append("phone", phone);
     formData.append("city", city);
@@ -323,7 +398,11 @@ async function submitOrder(event) {
     formData.append("transaction_id", transactionId);
 
     if (proofFile) {
-      formData.append("payment_proof", proofFile, proofFile.name);
+      formData.append(
+        "payment_proof",
+        proofFile,
+        proofFile.name
+      );
     }
 
     const response = await fetch(FUNCTION_URL, {
@@ -335,6 +414,7 @@ async function submitOrder(event) {
     });
 
     let result;
+
     try {
       result = await response.json();
     } catch {
@@ -343,11 +423,13 @@ async function submitOrder(event) {
       );
     }
 
-    if (!response.ok || !result.success) {
+    if (!response.ok || !result?.success) {
       console.error("Order function response:", result);
+
+      const detail = getErrorMessage(result);
+
       throw new Error(
-        result.error ||
-        `Order submit nahi hua. Server status: ${response.status}`
+        `Order submit nahi hua (HTTP ${response.status}): ${detail}`
       );
     }
 
@@ -359,21 +441,27 @@ async function submitOrder(event) {
     selectedVariant = null;
     variantList = [];
 
-    setOptions($("variant_id"), "Select a product first", [], () => "");
+    setOptions(
+      $("variant_id"),
+      "Select a product first",
+      [],
+      () => ""
+    );
+
     updatePaymentFields();
 
     showMessage(
       `Order submitted! Order number: ${result.order_number}. ` +
-      (paymentMethod === "ADVANCE"
-        ? "Payment verification pending hai."
-        : "Payment delivery par hogi.")
+      (
+        paymentMethod === "ADVANCE"
+          ? "Payment verification pending hai."
+          : "Payment delivery par hogi."
+      )
     );
   } catch (error) {
     console.error("Order submission error:", error);
-    showMessage(
-      error.message || "Order submit nahi ho saka. Dobara koshish karein.",
-      true
-    );
+
+    showMessage(getErrorMessage(error), true);
   } finally {
     button.disabled = false;
     button.textContent = "SUBMIT ORDER";
@@ -382,7 +470,10 @@ async function submitOrder(event) {
 
 function updatePaymentFields() {
   const isAdvance = $("advance").checked;
-  $("advance-fields").style.display = isAdvance ? "block" : "none";
+
+  $("advance-fields").style.display =
+    isAdvance ? "block" : "none";
+
   updateTotal();
 }
 
@@ -392,8 +483,10 @@ function startOrderPage() {
       "Supabase connection nahi mili. supabase.js check karein.",
       true
     );
+
     $("product_id").innerHTML =
       '<option value="">Database connection unavailable</option>';
+
     return;
   }
 
@@ -403,8 +496,18 @@ function startOrderPage() {
       await loadVariants(event.target.value);
     } catch (error) {
       console.error("Variant loading error:", error);
-      setOptions($("variant_id"), "Could not load sizes / colours", [], () => "");
-      showMessage("Size / colour error: " + error.message, true);
+
+      setOptions(
+        $("variant_id"),
+        "Could not load sizes / colours",
+        [],
+        () => ""
+      );
+
+      showMessage(
+        "Size / colour error: " + getErrorMessage(error),
+        true
+      );
     }
   });
 
@@ -419,10 +522,21 @@ function startOrderPage() {
 
   loadProducts().catch(error => {
     console.error("Products loading error:", error);
+
     $("product_id").innerHTML =
       '<option value="">Products could not load</option>';
-    setOptions($("variant_id"), "Select a product first", [], () => "");
-    showMessage("Product loading error: " + error.message, true);
+
+    setOptions(
+      $("variant_id"),
+      "Select a product first",
+      [],
+      () => ""
+    );
+
+    showMessage(
+      "Product loading error: " + getErrorMessage(error),
+      true
+    );
   });
 
   loadEasypaisaSettings();
