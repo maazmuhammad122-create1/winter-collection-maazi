@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#090909">
+  <title>Admin Panel | Winter Collection by Maazi</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    :root {
+      --bg: #090909;
+      --card: #141414;
+      --gold: #d8b76a;
+      --gold2: #c6a354;
+      --text: #f7f0df;
+      --muted: #c5bda9;
+      --border: #554522;
+      --danger: #c95b5b;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, sans-serif;
+    }
+
+    button, input, select, textarea { font: inherit; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+
+    #snow {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 10;
+      overflow: hidden;
+    }
+
+    .flake {
+      position: absolute;
+      top: -15px;
+      color: white;
+      opacity: .55;
+      animation: fall linear infinite;
+    }
+
+    @keyframes fall {
+      to { transform: translateY(110vh) rotate(360deg); }
+    }
+
+    header {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 24px 15px;
+      border-bottom: 1px solid var(--gold);
+      background: #090909;
+    }
+
+    header h1 {
+      margin: 0;
+      color: var(--gold);
+      font-family: Georgia, serif;
+      letter-spacing: 2px;
+      font-size: clamp(23px, 5vw, 34px);
+    }
+
+    header p {
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: 3px;
+      margin-bottom: 0;
+    }
+
+    .announcement {
+      background: var(--gold2);
+      color: #090909;
+      text-align: center;
+      padding: 9px;
+      font-size: 10px;
+      letter-spacing: 2px;
+      font-weight: bold;
+    }
+
+    .container {
+      width: min(1200px, 100%);
+      margin: auto;
+      padding: 22px 15px 50px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero {
+      text-align: center;
+      padding: 30px 15px;
+      background: linear-gradient(145deg, #201b10, #111, #090909);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 22px;
+    }
+
+    .hero small {
+      color: var(--gold);
+      letter-spacing: 3px;
+      font-size: 10px;
+    }
+
+    .hero h2 {
+      color: #e4c477;
+      font-family: Georgia, serif;
+      font-weight: normal;
+      font-size: clamp(28px, 6vw, 42px);
+      margin: 12px 0;
+    }
+
+    .hero p { color: var(--muted); font-size: 13px; }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 28px #0005;
+    }
+
+    .panel h2, .panel h3 {
+      color: var(--gold);
+      font-family: Georgia, serif;
+      font-weight: normal;
+      margin-top: 0;
+    }
+
+    .panel h2 { font-size: 25px; }
+    .panel h3 { font-size: 21px; }
+
+    .muted { color: var(--muted); font-size: 12px; line-height: 1.7; }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .field { margin-bottom: 15px; min-width: 0; }
+
+    label {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 13px;
+      background: #090909;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      outline: none;
+      min-width: 0;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--gold);
+    }
+
+    input[type="file"] { padding: 10px; }
+    input[type="checkbox"] { width: auto; }
+
+    .btn {
+      display: inline-block;
+      padding: 12px 16px;
+      background: var(--gold2);
+      color: #090909;
+      border: 1px solid var(--gold2);
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;
+      text-align: center;
+      font-size: 12px;
+    }
+
+    .btn:hover { background: #e4c477; }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--gold);
+    }
+
+    .btn-danger {
+      background: #3a1717;
+      border-color: #693333;
+      color: #ffdede;
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-top: 12px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .stat {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 17px 12px;
+      text-align: center;
+    }
+
+    .stat strong {
+      display: block;
+      color: var(--gold);
+      font-family: Georgia, serif;
+      font-size: clamp(22px, 4vw, 30px);
+      margin-bottom: 6px;
+    }
+
+    .stat span { color: var(--muted); font-size: 11px; }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 5px 0 14px;
+      margin-bottom: 12px;
+    }
+
+    .tabs .btn { white-space: nowrap; }
+
+    .tab-section { scroll-margin-top: 15px; }
+
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .toolbar input { flex: 1; min-width: 180px; }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+
+    table {
+      width: 100%;
+      min-width: 600px;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    th, td {
+      padding: 13px 12px;
+      text-align: left;
+      border-bottom: 1px solid #302817;
+    }
+
+    th {
+      color: var(--gold);
+      background: #201b10;
+      font-weight: normal;
+    }
+
+    td { color: var(--text); }
+
+    .status {
+      display: inline-block;
+      padding: 5px 8px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      color: var(--gold);
+      font-size: 10px;
+    }
+
+    .photo-preview {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .photo-preview img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      padding: 25px 10px;
+      border: 1px dashed var(--border);
+      border-radius: 6px;
+      font-size: 13px;
+    }
+
+    .hidden { display: none !important; }
+
+    #message {
+      color: var(--gold);
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      font-size: 12px;
+      margin-top: 12px;
+    }
+
+    footer {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 25px 15px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.8;
+    }
+
+    footer strong {
+      color: var(--gold);
+      font-family: Georgia, serif;
+      font-size: 20px;
+      font-weight: normal;
+    }
+
+    @media (max-width: 650px) {
+      .form-grid { grid-template-columns: 1fr; gap: 0; }
+      .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .panel { padding: 15px; }
+      .photo-preview { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .btn-row .btn { flex: 1; }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="snow" aria-hidden="true"></div>
+
+  <div class="announcement">
+    WINTER 2026 · MAazi ADMINISTRATION
+  </div>
+
+  <header>
+    <h1>WINTER COLLECTION</h1>
+    <p>BY MAAZI · ADMIN PANEL</p>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <small>PRIVATE MANAGEMENT AREA</small>
+      <h2>Manage Your Collection.</h2>
+      <p>Products · Inventory · Orders · Customer Reviews</p>
+    </section>
+
+    <!-- LOGIN -->
+    <section class="panel" id="login-panel">
+      <h2>Admin Login</h2>
+      <p class="muted">Sign in using your authorised Supabase account.</p>
+
+      <form id="login-form">
+        <div class="field">
+          <label for="email">Admin Email</label>
+          <input id="email" type="email" autocomplete="username"
+                 placeholder="Enter admin email" required>
+        </div>
+
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" type="password" autocomplete="current-password"
+                 placeholder="Enter password" required>
+        </div>
+
+        <button class="btn" type="submit">SECURE LOGIN</button>
+        <p id="login-message" class="muted" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <!-- DASHBOARD -->
+    <section id="dashboard" class="hidden">
+      <div class="btn-row" style="margin-bottom:18px">
+        <button class="btn btn-secondary" id="refresh-btn" type="button">
+          REFRESH DATA
+        </button>
+        <button class="btn btn-danger" id="logout-btn" type="button">
+          LOG OUT
+        </button>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <strong id="stat-products">—</strong>
+          <span>PRODUCTS</span>
+        </div>
+        <div class="stat">
+          <strong id="stat-orders">—</strong>
+          <span>ORDERS</span>
+        </div>
+        <div class="stat">
+          <strong id="stat-reviews">—</strong>
+          <span>REVIEWS</span>
+        </div>
+        <div class="stat">
+          <strong id="stat-stock">—</strong>
+          <span>TOTAL STOCK</span>
+        </div>
+      </div>
+
+      <nav class="tabs" aria-label="Admin sections">
+        <a class="btn" href="#products">PRODUCTS</a>
+        <a class="btn btn-secondary" href="#orders">ORDERS</a>
+        <a class="btn btn-secondary" href="#reviews">REVIEWS</a>
+      </nav>
+
+      <!-- PRODUCT MANAGEMENT -->
+      <section class="panel tab-section" id="products">
+        <h2>Product Management</h2>
+        <p class="muted">
+          Add products, upload multiple photos from your phone gallery,
+          and manage sizes, prices and stock.
+        </p>
+
+        <form id="product-form">
+          <input id="product-id" type="hidden">
+
+          <div class="form-grid">
+            <div class="field">
+              <label for="product-name">Product Name *</label>
+              <input id="product-name" required placeholder="e.g. Premium Winter Shirt">
+            </div>
+
+            <div class="field">
+              <label for="product-price">Price (PKR) *</label>
+              <input id="product-price" type="number" min="0" step="1"
+                     required placeholder="2800">
+            </div>
+
+            <div class="field">
+              <label for="product-sizes">Sizes</label>
+              <input id="product-sizes" placeholder="M, L, XL">
+            </div>
+
+            <div class="field">
+              <label for="product-stock">Total Stock *</label>
+              <input id="product-stock" type="number" min="0" step="1"
+                     required value="0">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="product-description">Product Description</label>
+            <textarea id="product-description" rows="3"
+                      placeholder="Product details..."></textarea>
+          </div>
+
+          <div class="field">
+            <label for="product-photos">Product Photos — Phone Gallery</label>
+            <input id="product-photos" type="file"
+                   accept="image/jpeg,image/png,image/webp,image/avif"
+                   multiple>
+            <p class="muted">
+              Select multiple images together. Upload capacity depends on your
+              Supabase storage settings and plan.
+            </p>
+            <div id="photo-preview" class="photo-preview"></div>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn" id="save-product-btn" type="submit">
+              SAVE PRODUCT
+            </button>
+            <button class="btn btn-secondary" id="reset-product-btn" type="button">
+              CLEAR FORM
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel">
+        <h3>All Products</h3>
+        <div class="toolbar">
+          <input id="product-search" type="search"
+                 placeholder="Search products...">
+        </div>
+        <div id="product-list" class="empty">
+          Product data will appear here after the admin script connects to Supabase.
+        </div>
+      </section>
+
+      <!-- ORDER MANAGEMENT -->
+      <section class="panel tab-section" id="orders">
+        <h2>Customer Orders</h2>
+        <p class="muted">Review orders and update their delivery status.</p>
+
+        <div class="toolbar">
+          <input id="order-search" type="search"
+                 placeholder="Search order, customer or phone...">
+          <select id="order-status-filter" aria-label="Filter orders">
+            <option value="">All statuses</option>
+            <option value="Pending">Pending</option>
+            <option value="Confirmed">Confirmed</option>
+            <option value="Processing">Processing</option>
+            <option value="Shipped">Shipped</option>
+            <option value="Delivered">Delivered</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
+        </div>
+
+        <div id="order-list" class="empty">
+          Orders will appear here once connected to your database.
+        </div>
+      </section>
+
+      <!-- REVIEW MANAGEMENT -->
+      <section class="panel tab-section" id="reviews">
+        <h2>Customer Reviews</h2>
+        <p class="muted">See customer feedback and ratings.</p>
+
+        <div id="review-list" class="empty">
+          Customer reviews will appear here once connected to your database.
+        </div>
+      </section>
+
+      <p id="message" role="status" aria-live="polite"></p>
+    </section>
+  </main>
+
+  <footer>
+    <strong>Winter Collection by Maazi</strong><br>
+    Premium Black &amp; Gold Admin Experience<br>
+    Keep your login details private.
+  </footer>
+
+  <script>
+    (() => {
+      const snow = document.getElementById("snow");
+      for (let i = 0; i < 35; i++) {
+        const flake = document.createElement("span");
+        flake.className = "flake";
+        flake.textContent = "❄";
+        flake.style.left = Math.random() * 100 + "%";
+        flake.style.animationDuration = (5 + Math.random() * 8) + "s";
+        flake.style.animationDelay = (-Math.random() * 12) + "s";
+        flake.style.fontSize = (8 + Math.random() * 12) + "px";
+        snow.appendChild(flake);
+      }
+
+      const fileInput = document.getElementById("product-photos");
+      const preview = document.getElementById("photo-preview");
+
+      fileInput.addEventListener("change", () => {
+        preview.replaceChildren();
+
+        Array.from(fileInput.files || []).forEach(file => {
+          if (!file.type.startsWith("image/")) return;
+
+          const img = document.createElement("img");
+          img.alt = file.name;
+          const url = URL.createObjectURL(file);
+          img.src = url;
+          img.onload = () => URL.revokeObjectURL(url);
+          preview.appendChild(img);
+        });
+      });
+    })();
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
