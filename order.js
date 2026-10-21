@@ -1,5 +1,4 @@
 const db = window.maaziSupabase;
-
 const $ = id => document.getElementById(id);
 
 let productList = [];
@@ -7,9 +6,11 @@ let variantList = [];
 let selectedProduct = null;
 let selectedVariant = null;
 
-function showMessage(text, error = false) {
-  $("form-message").textContent = text;
-  $("form-message").style.color = error ? "#ff8b8b" : "#e4c477";
+function showMessage(message, error = false) {
+  const el = $("form-message");
+  if (!el) return;
+  el.textContent = message;
+  el.style.color = error ? "#ff8b8b" : "#e4c477";
 }
 
 function formatPKR(amount) {
@@ -20,87 +21,50 @@ function makeOrderNumber() {
   return "MAZ-" + Date.now().toString().slice(-9);
 }
 
-async function loadProducts() {
-  const { data, error } = await db
-    .from("products")
-    .select("id,name,price,description,images,is_active")
-    .eq("is_active", true)
-    .order("created_at", { ascending: false });
+function setOptions(select, placeholder, items, getLabel) {
+  select.replaceChildren();
 
-  if (error) throw error;
+  const first = document.createElement("option");
+  first.value = "";
+  first.textContent = placeholder;
+  select.appendChild(first);
 
-  productList = data || [];
-
-  $("product_id").innerHTML =
-    '<option value="">Choose product</option>' +
-    productList.map(p =>
-      `<option value="${p.id}">${p.name.replace(/[&<>"']/g, "")} — ${formatPKR(p.price)}</option>`
-    ).join("");
-
-  // Allow a product selected from a URL, e.g. order.html?product=UUID
-  const requestedId = new URLSearchParams(location.search).get("product");
-  if (requestedId && productList.some(p => p.id === requestedId)) {
-    $("product_id").value = requestedId;
-    await loadVariants(requestedId);
-  }
-
-  updateTotal();
-}
-
-async function loadVariants(productId) {
-  selectedProduct = productList.find(p => p.id === productId) || null;
-  selectedVariant = null;
-  variantList = [];
-
-  $("variant_id").innerHTML = '<option value="">Loading sizes...</option>';
-
-  if (!selectedProduct) {
-    $("variant_id").innerHTML = '<option value="">Select a product first</option>';
-    updateTotal();
-    return;
-  }
-
-  const { data, error } = await db
-    .from("product_variants")
-    .select("id,product_id,size,color,stock")
-    .eq("product_id", productId)
-    .gt("stock", 0)
-    .order("size");
-
-  if (error) throw error;
-
-  variantList = data || [];
-
-  $("variant_id").innerHTML = variantList.length
-    ? '<option value="">Choose size / colour</option>' +
-      variantList.map(v => {
-        const label = [v.size, v.color].filter(Boolean).join(" / ");
-        return `<option value="${v.id}">${label} — ${v.stock} available</option>`;
-      }).join("")
-    : '<option value="">Currently out of stock</option>';
-
-  $("product-summary").textContent = selectedProduct.name;
-  updateTotal();
+  items.forEach(item => {
+    const option = document.createElement("option");
+    option.value = String(item.id);
+    option.textContent = getLabel(item);
+    select.appendChild(option);
+  });
 }
 
 function updateTotal() {
-  selectedProduct = productList.find(p => p.id === $("product_id").value) || null;
-  selectedVariant = variantList.find(v => v.id === $("variant_id").value) || null;
+  selectedProduct =
+    productList.find(p => String(p.id) === $("product_id").value) || null;
+
+  selectedVariant =
+    variantList.find(v => String(v.id) === $("variant_id").value) || null;
 
   const qty = Math.max(1, Number($("qty").value) || 1);
   const total = selectedProduct ? Number(selectedProduct.price) * qty : 0;
 
   $("total-display").textContent = "Total: " + formatPKR(total);
 
+  $("product-summary").textContent = selectedProduct
+    ? selectedProduct.name
+    : "Your selected product will appear here.";
+
   const advanceMode = $("advance").checked;
   const advanceInput = $("advance_amount");
+
   advanceInput.required = advanceMode;
   $("transaction_id").required = advanceMode;
   $("payment_proof").required = advanceMode;
 
   if (advanceMode) {
-    advanceInput.max = total;
-    if (Number(advanceInput.value) > total) advanceInput.value = total || "";
+    advanceInput.max = String(total);
+    if (Number(advanceInput.value) > total) {
+      advanceInput.value = total || "";
+    }
   } else {
     advanceInput.value = "";
     $("transaction_id").value = "";
@@ -108,25 +72,181 @@ function updateTotal() {
   }
 
   const advance = advanceMode ? Number(advanceInput.value || 0) : 0;
-  $("balance-display").textContent = "Balance Due: " + formatPKR(Math.max(0, total - advance));
+
+  $("balance-display").textContent =
+    "Balance Due: " + formatPKR(Math.max(0, total - advance));
+}
+
+async function loadProducts() {
+  const productSelect = $("product_id");
+  productSelect.innerHTML = '<option value="">Loading products...</option>';
+
+  if (!db) {
+    throw new Error("Supabase connection nahi mili. supabase.js check karein.");
+  }
+
+  const { data, error } = await db
+    .from("products")
+    .select("id,name,price,description,images,is_active")
+    .eq("is_active", true);
+
+  if (error) throw error;
+
+  productList = data || [];
+
+  productList.sort((a, b) =>
+    String(a.name || "").localeCompare(String(b.name || ""))
+  );
+
+  setOptions(
+    productSelect,
+    productList.length ? "Choose product" : "No active products found",
+    productList,
+    p => `${p.name} — ${formatPKR(p.price)}`
+  );
+
+  const requestedId = new URLSearchParams(location.search).get("product");
+
+  if (requestedId && productList.some(p => String(p.id) === requestedId)) {
+    productSelect.value = requestedId;
+    await loadVariants(requestedId);
+  } else {
+    selectedProduct = null;
+    selectedVariant = null;
+    variantList = [];
+    setOptions($("variant_id"), "Select a product first", [], () => "");
+  }
+
+  updateTotal();
+
+  if (!productList.length) {
+    showMessage(
+      "Koi active product nahi mila. Supabase mein products aur is_active check karein.",
+      true
+    );
+  }
+}
+
+async function loadVariants(productId) {
+  selectedProduct =
+    productList.find(p => String(p.id) === String(productId)) || null;
+
+  selectedVariant = null;
+  variantList = [];
+
+  if (!selectedProduct) {
+    setOptions($("variant_id"), "Select a product first", [], () => "");
+    updateTotal();
+    return;
+  }
+
+  setOptions($("variant_id"), "Loading sizes / colours...", [], () => "");
+
+  const { data, error } = await db
+    .from("product_variants")
+    .select("id,product_id,size,color,stock")
+    .eq("product_id", productId)
+    .gt("stock", 0);
+
+  if (error) throw error;
+
+  variantList = data || [];
+
+  variantList.sort((a, b) => {
+    const sizeCompare = String(a.size || "").localeCompare(String(b.size || ""));
+    return sizeCompare || String(a.color || "").localeCompare(String(b.color || ""));
+  });
+
+  setOptions(
+    $("variant_id"),
+    variantList.length ? "Choose size / colour" : "Currently out of stock",
+    variantList,
+    v => {
+      const label = [v.size, v.color].filter(Boolean).join(" / ");
+      return `${label || "Standard"} — ${v.stock} available`;
+    }
+  );
+
+  updateTotal();
+
+  if (!variantList.length) {
+    showMessage(
+      "Is product ka available size/colour nahi mila. product_variants mein product_id aur stock check karein.",
+      true
+    );
+  } else {
+    showMessage("");
+  }
+}
+
+async function loadEasypaisaSettings() {
+  const titleEl = $("easypaisa-account-title");
+  const numberEl = $("easypaisa-account-number");
+  const instructionsEl = $("easypaisa-payment-instructions");
+
+  try {
+    const { data, error } = await db
+      .from("settings")
+      .select("key,value")
+      .in("key", [
+        "easypaisa_title",
+        "easypaisa_number",
+        "advance_instructions"
+      ]);
+
+    if (error) throw error;
+
+    const settings = Object.fromEntries(
+      (data || []).map(item => [item.key, item.value])
+    );
+
+    titleEl.textContent =
+      settings.easypaisa_title || "Account details will be updated soon";
+
+    numberEl.textContent =
+      settings.easypaisa_number || "Not available yet";
+
+    instructionsEl.textContent =
+      settings.advance_instructions ||
+      "Please contact the store before making payment.";
+  } catch (error) {
+    titleEl.textContent = "Temporarily unavailable";
+    numberEl.textContent = "Please contact the store";
+    instructionsEl.textContent = "Payment details could not be loaded.";
+
+    console.error("Easypaisa settings error:", error);
+  }
 }
 
 async function uploadPaymentProof(file) {
-  if (!file) throw new Error("Payment screenshot select karein.");
+  if (!file) {
+    throw new Error("Payment screenshot select karein.");
+  }
+
   if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
     throw new Error("Screenshot JPG, PNG ya WebP format mein honi chahiye.");
   }
+
   if (file.size > 5 * 1024 * 1024) {
     throw new Error("Payment screenshot 5 MB se chhoti honi chahiye.");
   }
 
-  const path = `payment-proofs/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const uniqueId = globalThis.crypto?.randomUUID
+    ? globalThis.crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
-  // A separate private bucket and its upload policy must be configured
-  // for payment proofs before advance orders can be submitted.
-  const { error } = await db.storage.from("payment-proofs").upload(path, file);
+  const path = `${uniqueId}-${safeName}`;
+
+  const { error } = await db.storage
+    .from("payment-proofs")
+    .upload(path, file, { upsert: false });
+
   if (error) {
-    throw new Error("Payment proof upload nahi hua. Payment-proof storage setup check karein.");
+    console.error("Payment proof upload error:", error);
+    throw new Error(
+      "Screenshot upload nahi hua. Supabase payment-proofs bucket aur upload permissions check karein."
+    );
   }
 
   return path;
@@ -143,25 +263,46 @@ async function submitOrder(event) {
   const button = $("submit-btn");
   button.disabled = true;
   button.textContent = "PLEASE WAIT...";
-  showMessage("Order submit ho raha hai...");
 
   let proofPath = null;
+  let createdOrderId = null;
 
   try {
-    const product = productList.find(p => p.id === $("product_id").value);
-    const variant = variantList.find(v => v.id === $("variant_id").value);
-    const qty = Number($("qty").value);
-    const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
+    const product = productList.find(
+      p => String(p.id) === $("product_id").value
+    );
 
-    if (!product || !variant) {
-      throw new Error("Product aur available size select karein.");
+    const variant = variantList.find(
+      v => String(v.id) === $("variant_id").value
+    );
+
+    const qty = Number($("qty").value);
+    const paymentMethod = document.querySelector(
+      'input[name="payment_method"]:checked'
+    )?.value;
+
+    if (!product) {
+      throw new Error("Product select karein.");
     }
 
-    if (!Number.isInteger(qty) || qty < 1 || qty > 20 || qty > variant.stock) {
+    if (!variant || String(variant.product_id) !== String(product.id)) {
+      throw new Error("Is product ka available size / colour select karein.");
+    }
+
+    if (!Number.isInteger(qty) || qty < 1 || qty > 20 || qty > Number(variant.stock)) {
       throw new Error("Quantity available stock ke mutabiq enter karein.");
     }
 
+    if (!["COD", "ADVANCE"].includes(paymentMethod)) {
+      throw new Error("Payment method select karein.");
+    }
+
     const total = Number(product.price) * qty;
+
+    if (!Number.isFinite(total) || total <= 0) {
+      throw new Error("Product ki price valid nahi hai.");
+    }
+
     let advance = 0;
     let transactionId = null;
 
@@ -172,28 +313,34 @@ async function submitOrder(event) {
       if (!Number.isInteger(advance) || advance < 1 || advance > total) {
         throw new Error("Valid advance amount enter karein.");
       }
-      if (!transactionId) throw new Error("Transaction ID enter karein.");
+
+      if (!transactionId) {
+        throw new Error("Transaction ID enter karein.");
+      }
 
       proofPath = await uploadPaymentProof($("payment_proof").files[0]);
     }
 
-    const orderNumber = makeOrderNumber();
+    showMessage("Order save ho raha hai...");
 
     const orderPayload = {
-      order_number: orderNumber,
+      order_number: makeOrderNumber(),
       customer_name: $("customer_name").value.trim(),
       phone: $("phone").value.trim(),
       city: $("city").value.trim(),
       address: $("address").value.trim(),
-      total,
+      total: total,
       advance_amount: advance,
       balance_due: total - advance,
       status: "pending",
       payment_method: paymentMethod,
-      payment_status: paymentMethod === "COD" ? "pending" : "verification_pending",
+      payment_status:
+        paymentMethod === "COD" ? "pending" : "verification_pending",
       transaction_id: transactionId,
       payment_proof_url: proofPath,
-      payment_deadline: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), ,
+      payment_deadline: new Date(
+        Date.now() + 24 * 60 * 60 * 1000
+      ).toISOString(),
       admin_note: null
     };
 
@@ -205,52 +352,94 @@ async function submitOrder(event) {
 
     if (orderError) throw orderError;
 
+    createdOrderId = order.id;
+
     const { error: itemError } = await db.from("order_items").insert({
       order_id: order.id,
       variant_id: variant.id,
       product_name: product.name,
       size: variant.size,
       color: variant.color || "",
-      qty,
+      qty: qty,
       unit_price: Number(product.price)
     });
 
     if (itemError) {
-      // Do not leave an incomplete order behind.
-      await db.from("orders").delete().eq("id", order.id);
-      throw itemError;
+      console.error("Order item save error:", itemError);
+      throw new Error(
+        "Order record ban gaya, lekin order item save nahi hua. Admin se order verify karwayein. Error: " +
+        itemError.message
+      );
     }
+
+    createdOrderId = null;
 
     $("order-form").reset();
     $("advance-fields").style.display = "none";
+
+    setOptions($("variant_id"), "Select a product first", [], () => "");
     $("product_id").value = "";
-    $("variant_id").innerHTML = '<option value="">Select a product first</option>';
+
     selectedProduct = null;
     selectedVariant = null;
+    variantList = [];
+
     updateTotal();
 
     showMessage(
       `Order submitted! Order number: ${order.order_number}. ` +
       (paymentMethod === "ADVANCE"
-        ? "Payment abhi verification ke liye pending hai."
+        ? "Payment verification pending hai."
         : "Payment delivery par hogi.")
     );
   } catch (error) {
-    showMessage(error.message || "Order submit nahi ho saka.", true);
+    console.error("Order submission error:", error);
+
+    if (createdOrderId) {
+      showMessage(
+        "Order save ho gaya tha, lekin item save nahi hua. Dobara order submit na karein; admin se order verify karwayein. Error: " +
+        (error.message || String(error)),
+        true
+      );
+    } else {
+      showMessage(
+        error.message || "Order submit nahi ho saka. Dobara koshish karein.",
+        true
+      );
+    }
   } finally {
     button.disabled = false;
     button.textContent = "SUBMIT ORDER";
   }
 }
 
-if (!db) {
-  showMessage("supabase.js mein project URL aur publishable key check karein.", true);
-} else {
+function updatePaymentFields() {
+  const isAdvance = $("advance").checked;
+  $("advance-fields").style.display = isAdvance ? "block" : "none";
+  updateTotal();
+}
+
+function startOrderPage() {
+  if (!db) {
+    showMessage(
+      "Supabase connection nahi mili. supabase.js mein URL aur publishable key check karein.",
+      true
+    );
+
+    $("product_id").innerHTML =
+      '<option value="">Database connection unavailable</option>';
+
+    return;
+  }
+
   $("product_id").addEventListener("change", async event => {
     try {
+      showMessage("");
       await loadVariants(event.target.value);
     } catch (error) {
-      showMessage(error.message, true);
+      console.error("Variant loading error:", error);
+      setOptions($("variant_id"), "Could not load sizes / colours", [], () => "");
+      showMessage("Size / colour error: " + (error.message || String(error)), true);
     }
   });
 
@@ -258,45 +447,28 @@ if (!db) {
   $("qty").addEventListener("input", updateTotal);
   $("advance_amount").addEventListener("input", updateTotal);
 
+  $("cod").addEventListener("change", updatePaymentFields);
+  $("advance").addEventListener("change", updatePaymentFields);
+
   $("order-form").addEventListener("submit", submitOrder);
 
+  updatePaymentFields();
+
   loadProducts().catch(error => {
-    showMessage("Products load nahi hue. Database permissions check karein.", true);
-    console.error(error);
-  });
-}
-async function loadEasypaisaSettings() {
-  const titleEl = document.getElementById("easypaisa-account-title");
-  const numberEl = document.getElementById("easypaisa-account-number");
-  const instructionsEl = document.getElementById("easypaisa-payment-instructions");
+    console.error("Products loading error:", error);
 
-  try {
-    const { data, error } = await db
-      .from("settings")
-      .select("key, value")
-      .in("key", [
-        "easypaisa_title",
-        "easypaisa_number",
-        "advance_instructions"
-      ]);
+    $("product_id").innerHTML =
+      '<option value="">Products could not load</option>';
 
-    if (error) throw error;
+    setOptions($("variant_id"), "Select a product first", [], () => "");
 
-    const settings = Object.fromEntries(
-      (data || []).map(item => [item.key, item.value])
+    showMessage(
+      "Product loading error: " + (error.message || String(error)),
+      true
     );
+  });
 
-    titleEl.textContent = settings.easypaisa_title || "Account details will be updated soon";
-    numberEl.textContent = settings.easypaisa_number || "Not available yet";
-    instructionsEl.textContent = settings.advance_instructions || "Please contact the store before making payment.";
-  } catch (error) {
-    titleEl.textContent = "Temporarily unavailable";
-    numberEl.textContent = "Please contact the store";
-    instructionsEl.textContent = "Payment details could not be loaded.";
-    console.error("Easypaisa settings error:", error);
-  }
-}
-
-if (db) {
   loadEasypaisaSettings();
 }
+
+startOrderPage();
