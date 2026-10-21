@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#090909">
   <title>Place Order | Winter Collection by Maazi</title>
+
   <style>
     *{box-sizing:border-box}
     body{margin:0;background:#090909;color:#f7f0df;font-family:Arial,sans-serif}
@@ -20,6 +21,7 @@
     .option input{width:auto}
     .option label{margin:0;color:#f7f0df}
     button,.btn{display:block;width:100%;padding:14px;margin-top:16px;background:#c6a354;color:#090909;border:0;border-radius:7px;font-weight:bold;text-align:center;text-decoration:none;cursor:pointer}
+    button:disabled{opacity:.6;cursor:not-allowed}
     .price{color:#e4c477;font-weight:bold}
     .muted{color:#c5bda9;font-size:14px;line-height:1.6}
     #advance-fields{display:none}
@@ -29,8 +31,10 @@
     footer{text-align:center;padding:25px;color:#c5bda9}
   </style>
 </head>
+
 <body>
   <div id="snow"></div>
+
   <header>
     <h1>WINTER COLLECTION</h1>
     <p>BY MAAZI · WINTER 2026</p>
@@ -49,29 +53,29 @@
         <h2>Customer Details</h2>
 
         <label for="customer_name">Full Name *</label>
-        <input id="customer_name" required maxlength="100" autocomplete="name">
+        <input id="customer_name" name="customer_name" required maxlength="100" autocomplete="name">
 
         <label for="phone">Phone / WhatsApp *</label>
-        <input id="phone" required type="tel" maxlength="25" autocomplete="tel">
+        <input id="phone" name="phone" required type="tel" maxlength="25" autocomplete="tel">
 
         <label for="city">City *</label>
-        <input id="city" required maxlength="100" autocomplete="address-level2">
+        <input id="city" name="city" required maxlength="100" autocomplete="address-level2">
 
         <label for="address">Complete Delivery Address *</label>
-        <textarea id="address" required maxlength="1000" autocomplete="street-address"></textarea>
+        <textarea id="address" name="address" required maxlength="1000" autocomplete="street-address"></textarea>
 
         <label for="product_id">Product *</label>
-        <select id="product_id" required>
+        <select id="product_id" name="product_id" required>
           <option value="">Loading products...</option>
         </select>
 
         <label for="variant_id">Size / Colour *</label>
-        <select id="variant_id" required>
+        <select id="variant_id" name="variant_id" required>
           <option value="">Select a product first</option>
         </select>
 
         <label for="qty">Quantity *</label>
-        <input id="qty" type="number" min="1" max="20" value="1" required>
+        <input id="qty" name="qty" type="number" min="1" max="20" value="1" required>
       </section>
 
       <section class="panel">
@@ -87,31 +91,30 @@
           <label for="advance">Advance Payment</label>
         </div>
 
-        <div >
+        <div id="advance-fields">
           <label for="advance_amount">Advance Amount (PKR) *</label>
-          <input id="advance_amount" type="number" min="1" step="1">
+          <input id="advance_amount" name="advance_amount" type="number" min="1" step="1">
 
-           <div id="easypaisa-details" class="muted">
-  <h3>Easypaisa Advance Payment</h3>
-  <p>Account Title: <strong id="easypaisa-account-title">Loading...</strong></p>
-  <p>Account Number: <strong id="easypaisa-account-number">Loading...</strong></p>
-  <p id="easypaisa-payment-instructions">
-    Payment instructions yahan show hongi.
-  </p>
-  <p>Payment karne ke baad Transaction ID aur payment screenshot submit karein.</p>
-</div>
+          <div id="easypaisa-details" class="muted">
+            <h3>Easypaisa Advance Payment</h3>
+            <p>Account Title: <strong id="easypaisa-account-title">Loading...</strong></p>
+            <p>Account Number: <strong id="easypaisa-account-number">Loading...</strong></p>
+            <p id="easypaisa-payment-instructions">Payment instructions yahan show hongi.</p>
+            <p>Payment karne ke baad Transaction ID aur payment screenshot submit karein.</p>
+          </div>
 
           <label for="transaction_id">Transaction ID *</label>
-          <input id="transaction_id" maxlength="150">
+          <input id="transaction_id" name="transaction_id" maxlength="150">
 
           <label for="payment_proof">Payment Screenshot / Proof *</label>
-          <input id="payment_proof" type="file" accept="image/jpeg,image/png,image/webp">
+          <input id="payment_proof" name="payment_proof" type="file" accept="image/jpeg,image/png,image/webp">
+
           <p class="muted">Payment proof submit karna payment ki verification ki guarantee nahi hai. Store payment verify karega.</p>
         </div>
 
         <p id="balance-display" class="price">Balance Due: PKR 0</p>
         <button type="submit" id="submit-btn">SUBMIT ORDER</button>
-        <p id="form-message" role="status" class="muted"></p>
+        <p id="form-message" role="status" aria-live="polite" class="muted"></p>
       </section>
     </form>
   </main>
@@ -121,25 +124,42 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase.js"></script>
   <script src="order.js"></script>
+
   <script>
+    // Snowfall effect — original theme preserved
     const snow = document.getElementById("snow");
-    for(let i=0;i<35;i++){
-      const f=document.createElement("span");
-      f.className="flake";
-      f.textContent="❄";
-      f.style.left=Math.random()*100+"%";
-      f.style.animationDuration=(5+Math.random()*8)+"s";
-      f.style.animationDelay=(-Math.random()*12)+"s";
-      f.style.fontSize=(8+Math.random()*12)+"px";
+
+    for (let i = 0; i < 35; i++) {
+      const f = document.createElement("span");
+      f.className = "flake";
+      f.textContent = "❄";
+      f.style.left = Math.random() * 100 + "%";
+      f.style.animationDuration = (5 + Math.random() * 8) + "s";
+      f.style.animationDelay = (-Math.random() * 12) + "s";
+      f.style.fontSize = (8 + Math.random() * 12) + "px";
       snow.appendChild(f);
     }
 
-    document.querySelectorAll('input[name="payment_method"]').forEach(radio=>{
-      radio.addEventListener("change",()=>{
-        document.getElementById().style.display =
-          document.getElementById("advance").checked ? "block" : "none";
-      });
-    });
+    // Correct COD / Advance payment field handling
+    const advanceFields = document.getElementById("advance-fields");
+    const codRadio = document.getElementById("cod");
+    const advanceRadio = document.getElementById("advance");
+
+    function updatePaymentFields() {
+      const isAdvance = advanceRadio.checked;
+
+      advanceFields.style.display = isAdvance ? "block" : "none";
+
+      document.getElementById("advance_amount").required = isAdvance;
+      document.getElementById("transaction_id").required = isAdvance;
+      document.getElementById("payment_proof").required = isAdvance;
+    }
+
+    codRadio.addEventListener("change", updatePaymentFields);
+    advanceRadio.addEventListener("change", updatePaymentFields);
+
+    // Set correct initial state
+    updatePaymentFields();
   </script>
 </body>
 </html>
