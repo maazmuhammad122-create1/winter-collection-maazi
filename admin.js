@@ -285,16 +285,29 @@ if (!db) {
       message(error.message, true);
       return;
     }
+const { data: { user }, error: userError } = await db.auth.getUser();
 
-    const { data: { user } } = await db.auth.getUser();
-    const { data: admin, error: adminError } = await db
-      .from("admins").select("user_id").eq("user_id", user.id).maybeSingle();
+if (userError || !user) {
+  message("User verify nahi hua: " + (userError?.message || "User missing"), true);
+  return;
+}
 
-    if (adminError || !admin) {
-      await db.auth.signOut();
-      message("Yeh account admins table mein authorized nahi hai.", true);
-      return;
-    }
+const { data: admin, error: adminError } = await db
+  .from("admins")
+  .select("user_id")
+  .eq("user_id", user.id)
+  .maybeSingle();
+
+if (adminError) {
+  message("Admins table error: " + adminError.message, true);
+  return;
+}
+
+if (!admin) {
+  message("Admin record nahi mila. User ID: " + user.id, true);
+  return;
+}
+    
 
     showDashboard();
     await refreshAll();
