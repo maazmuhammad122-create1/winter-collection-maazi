@@ -34,12 +34,12 @@ function escapeHTML(value = "") {
 }
 
 function showLogin() {
-  $("login-form").style.display = "block";
+  $("login-pannel").style.display = "block";
   $("dashboard").style.display = "hidden";
 }
 
 function showDashboard() {
-  $("login-form").style.display = "none";
+  $("login-pannel").style.display = "none";
   $("dashboard").style.display = "hidden";
 }
 
