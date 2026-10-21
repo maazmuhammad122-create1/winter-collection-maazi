@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#090909">
+  <title>Winter Collection by Maazi</title>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;background:#090909;color:#f7f0df;font-family:Arial,sans-serif}
+    header{text-align:center;padding:28px 15px;border-bottom:1px solid #b89548}
+    h1{color:#d8b76a;font-family:Georgia,serif;letter-spacing:1px}
+    header p{color:#c5bda9}
+    .hero{text-align:center;padding:55px 18px;background:linear-gradient(145deg,#171717,#090909)}
+    .hero h2{font-size:32px;color:#e4c477}
+    .hero p{color:#ddd}
+    .products{padding:24px 16px;max-width:1100px;margin:auto}
+    .search{width:100%;padding:14px;border:1px solid #b89548;background:#161616;color:white;border-radius:8px}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:20px}
+    .card{border:1px solid #554522;border-radius:10px;overflow:hidden;background:#141414}
+    .placeholder{height:160px;display:grid;place-items:center;background:linear-gradient(145deg,#27231a,#111);color:#d8b76a}
+    .info{padding:12px}
+    .info h3{margin:4px 0 10px}
+    .price{color:#e4c477;font-weight:bold}
+    button,.order{display:block;width:100%;padding:12px;margin-top:12px;background:#c6a354;color:#090909;border:0;border-radius:6px;font-weight:bold;text-decoration:none;text-align:center;cursor:pointer}
+    #snow{position:fixed;inset:0;pointer-events:none;z-index:5;overflow:hidden}
+    .flake{position:absolute;top:-15px;color:white;animation:fall linear infinite;opacity:.65}
+    @keyframes fall{to{transform:translateY(110vh) rotate(360deg)}}
+    footer{text-align:center;padding:30px;color:#c5bda9}
+    @media(min-width:700px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}.placeholder{height:220px}}
+  </style>
+</head>
+<body>
+  <div id="snow"></div>
+  <header>
+    <h1>WINTER COLLECTION</h1>
+    <p>BY MAAZI · WINTER 2026</p>
+  </header>
+  <section class="hero">
+    <h2>Winter, In Style.</h2>
+    <p>Discover your next winter favourite.</p>
+    <a class="order" style="max-width:180px;margin:20px auto" href="#products">SHOP NOW</a>
+  </section>
+  <main class="products" id="products">
+    <h2>Our Collection</h2>
+    <input class="search" id="search" placeholder="Search products..." aria-label="Search products">
+    <div class="grid" id="grid"></div>
+  </main>
+  <footer>Winter Collection by Maazi · Contact us for help with your order.</footer>
+  <script>
+    const demoProducts = [
+      {name:"Winter Shirt",price:2800,sizes:["M","L","XL"]},
+      {name:"Classic Winter Shirt",price:2800,sizes:["M","L","XL"]}
+    ];
+    const grid=document.getElementById("grid");
+    function render(items){
+      grid.innerHTML="";
+      items.forEach(p=>{
+        const card=document.createElement("article");
+        card.className="card";
+        const placeholder=document.createElement("div");
+        placeholder.className="placeholder";
+        placeholder.textContent="WINTER COLLECTION";
+        const info=document.createElement("div");
+        info.className="info";
+        const title=document.createElement("h3");
+        title.textContent=p.name;
+        const price=document.createElement("div");
+        price.className="price";
+        price.textContent="PKR "+p.price;
+        const sizes=document.createElement("p");
+        sizes.textContent="Sizes: "+p.sizes.join(", ");
+        const btn=document.createElement("button");
+        btn.textContent="ORDER NOW";
+        btn.onclick=()=>alert("Order form will be connected in the next setup step.");
+        info.append(title,price,sizes,btn);
+        card.append(placeholder,info);
+        grid.append(card);
+      });
+    }
+    render(demoProducts);
+    document.getElementById("search").addEventListener("input",e=>{
+      render(demoProducts.filter(p=>p.name.toLowerCase().includes(e.target.value.toLowerCase())));
+    });
+    const snow=document.getElementById("snow");
+    for(let i=0;i<35;i++){
+      const f=document.createElement("span");
+      f.className="flake";f.textContent="❄";
+      f.style.left=Math.random()*100+"%";
+      f.style.animationDuration=(5+Math.random()*8)+"s";
+      f.style.animationDelay=(-Math.random()*12)+"s";
+      f.style.fontSize=(8+Math.random()*12)+"px";
+      snow.appendChild(f);
+    }
+  </script>
+</body>
+</html>
