@@ -1,266 +1,340 @@
-/* Winter Collection by Maazi
-   Storefront interactions
-   Loads products, images and sizes from Supabase
-*/
+/* Winter Collection by Maazi — Storefront */
 
-const StoreApp = (() => {
+(() => {
+  "use strict";
+
+  const $ = (id) => document.getElementById(id);
+
   let products = [];
+  let searchText = "";
 
-  function element(tag, className, text) {
+  function makeElement(tag, className, text) {
     const el = document.createElement(tag);
+
     if (className) el.className = className;
     if (text !== undefined) el.textContent = text;
+
     return el;
   }
 
-  function normalizeImages(images) {
-    if (!images) return [];
+  function formatPKR(amount) {
+    return "PKR " + Number(amount || 0).toLocaleString("en-PK");
+  }
+
+  function normalizeImages(value) {
+    if (!value) return [];
+
+    let images = value;
 
     if (typeof images === "string") {
       try {
         images = JSON.parse(images);
       } catch {
-        return images.startsWith("http") ? [images] : [];
+        images = [images];
       }
     }
 
-    if (!Array.isArray(images)) return [];
+    if (!Array.isArray(images)) images = [images];
 
     return images
-      .map(image => {
-        if (typeof image === "string") return image;
-        if (image && typeof image.url === "string") return image.url;
+      .map((item) => {
+        if (typeof item === "string") return item.trim();
+
+        if (item && typeof item === "object") {
+          return item.url || item.publicUrl || item.public_url || item.src || "";
+        }
+
         return "";
       })
-      .filter(url => url.startsWith("http"));
+      .filter((url) => /^https?:\/\//i.test(url));
   }
 
-  function renderProducts(list = products) {
-    const grid = document.getElementById("grid");
+  function showStatus(message, isError = false) {
+    const status = $("status-message");
+    if (!status) return;
+
+    status.textContent = message;
+    status.style.color = isError ? "#ff8b8b" : "#bdb5a3";
+  }
+
+  function createGallery(images, productName) {
+    const gallery = makeElement("div", "product-gallery");
+
+    if (!images.length) {
+      const placeholder = makeElement("div", "gallery-slide");
+      placeholder.textContent = "Product image coming soon";
+      placeholder.style.color = "#bdb5a3";
+      gallery.appendChild(placeholder);
+      return gallery;
+    }
+
+    const track = makeElement("div", "gallery-track");
+    track.setAttribute("aria-label", productName + " pictures");
+
+    const dots = makeElement("div", "gallery-dots");
+    const count = makeElement("span", "image-count", "1 / " + images.length);
+
+    images.forEach((url, index) => {
+      const slide = makeElement("div", "gallery-slide");
+      const img = document.createElement("img");
+
+      img.src = url;
+      img.alt = productName + " — picture " + (index + 1);
+      img.loading = index === 0 ? "eager" : "lazy";
+      img.decoding = "async";
+      img.draggable = false;
+
+      img.addEventListener("error", () => {
+        slide.replaceChildren();
+        slide.textContent = "Image unavailable";
+        slide.style.color = "#bdb5a3";
+      }, { once: true });
+
+      slide.appendChild(img);
+      track.appendChild(slide);
+
+      const dot = makeElement("span", "gallery-dot");
+      if (index === 0) dot.classList.add("active");
+      dots.appendChild(dot);
+    });
+
+    gallery.appendChild(track);
+
+    if (images.length > 1) {
+      const prev = makeElement("button", "gallery-arrow gallery-prev", "‹");
+      const next = makeElement("button", "gallery-arrow gallery-next", "›");
+
+      prev.type = "button";
+      next.type = "button";
+      prev.setAttribute("aria-label", "Previous picture");
+      next.setAttribute("aria-label", "Next picture");
+
+      gallery.appendChild(prev);
+      gallery.appendChild(next);
+      gallery.appendChild(dots);
+      gallery.appendChild(count);
+
+      let currentIndex = 0;
+      let scrollTimer = null;
+
+      function goTo(index) {
+        currentIndex = (index + images.length) % images.length;
+
+        track.scrollTo({
+          left: currentIndex * track.clientWidth,
+          behavior: "smooth"
+        });
+
+        updateIndicators();
+      }
+
+      function updateIndicators() {
+        [...dots.children].forEach((dot, i) => {
+          dot.classList.toggle("active", i === currentIndex);
+        });
+
+        count.textContent = (currentIndex + 1) + " / " + images.length;
+      }
+
+      prev.addEventListener("click", () => goTo(currentIndex - 1));
+      next.addEventListener("click", () => goTo(currentIndex + 1));
+
+      track.addEventListener("scroll", () => {
+        if (scrollTimer) clearTimeout(scrollTimer);
+
+        scrollTimer = setTimeout(() => {
+          currentIndex = Math.max(
+            0,
+            Math.min(
+              images.length - 1,
+              Math.round(track.scrollLeft / Math.max(track.clientWidth, 1))
+            )
+          );
+
+          updateIndicators();
+        }, 70);
+      }, { passive: true });
+
+      window.addEventListener("resize", () => {
+        track.scrollLeft = currentIndex * track.clientWidth;
+      });
+    } else {
+      gallery.appendChild(count);
+    }
+
+    return gallery;
+  }
+
+  function createProductCard(product) {
+    const card = makeElement("article", "product-card");
+
+    card.appendChild(createGallery(product.photos, product.name));
+
+    const info = makeElement("div", "product-info");
+
+    info.appendChild(makeElement("h3", "product-name", product.name));
+
+    if (product.description) {
+      info.appendChild(
+        makeElement("p", "product-description", product.description)
+      );
+    }
+
+    info.appendChild(
+      makeElement("p", "product-price", formatPKR(product.price))
+    );
+
+    info.appendChild(makeElement("p", "size-heading", "AVAILABLE SIZES"));
+
+    const sizeList = makeElement("div", "size-list");
+
+    product.variants.forEach((variant) => {
+      const label = [variant.size, variant.color].filter(Boolean).join(" / ");
+      const chip = makeElement(
+        "span",
+        "size-chip",
+        label + (variant.stock > 0 ? "" : " · Out of stock")
+      );
+
+      if (variant.stock <= 0) chip.classList.add("unavailable");
+
+      sizeList.appendChild(chip);
+    });
+
+    if (!product.variants.length) {
+      sizeList.appendChild(
+        makeElement("span", "size-chip unavailable", "Currently unavailable")
+      );
+    }
+
+    info.appendChild(sizeList);
+
+    const orderButton = makeElement("a", "order-btn", "ORDER NOW");
+    orderButton.href = "order.html?product=" + encodeURIComponent(product.id);
+
+    if (!product.variants.some((variant) => variant.stock > 0)) {
+      orderButton.classList.add("disabled");
+      orderButton.setAttribute("aria-disabled", "true");
+      orderButton.addEventListener("click", (event) => event.preventDefault());
+    }
+
+    info.appendChild(orderButton);
+    card.appendChild(info);
+
+    return card;
+  }
+
+  function renderProducts() {
+    const grid = $("grid");
     if (!grid) return;
 
     grid.replaceChildren();
 
-    if (!list.length) {
-      grid.append(
-        element("p", "", "No products available right now.")
+    const filtered = products.filter((product) => {
+      const text = (
+        product.name + " " + product.description
+      ).toLowerCase();
+
+      return text.includes(searchText);
+    });
+
+    if (!filtered.length) {
+      grid.appendChild(
+        makeElement(
+          "div",
+          "empty-state",
+          products.length
+            ? "No products match your search."
+            : "No active products are available right now."
+        )
       );
       return;
     }
 
-    list.forEach(product => {
-      const card = element("article", "product-card");
-      const gallery = element("div", "product-gallery");
-
-      if (product.photos.length) {
-        product.photos.forEach(url => {
-          const img = element("img");
-          img.src = url;
-          img.alt = product.name;
-          img.loading = "lazy";
-          gallery.append(img);
-        });
-      } else {
-        gallery.append(
-          element("div", "product-placeholder", "WINTER COLLECTION")
-        );
-      }
-
-      const info = element("div", "product-info");
-      info.append(element("h3", "", product.name));
-
-      info.append(
-        element(
-          "p",
-          "product-price",
-          `PKR ${Number(product.price).toLocaleString()}`
-        )
-      );
-
-      if (product.description) {
-        info.append(
-          element("p", "product-description", product.description)
-        );
-      }
-
-      const sizeLabel = element("label", "", "Select size");
-      const sizeSelect = element("select");
-      sizeSelect.setAttribute("aria-label", `Size for ${product.name}`);
-
-      if (product.sizes.length) {
-        product.sizes.forEach(size => {
-          const option = element("option", "", size);
-          option.value = size;
-          sizeSelect.append(option);
-        });
-      } else {
-        const option = element("option", "", "Size unavailable");
-        option.value = "";
-        option.disabled = true;
-        option.selected = true;
-        sizeSelect.append(option);
-        sizeSelect.disabled = true;
-      }
-
-      info.append(sizeLabel, sizeSelect);
-
-      const orderButton = element("button", "order-btn", "ORDER NOW");
-      orderButton.type = "button";
-      orderButton.disabled = !product.sizes.length;
-
-      orderButton.addEventListener("click", () => {
-        if (!sizeSelect.value) return;
-
-        const query = new URLSearchParams({
-          product: product.name,
-          size: sizeSelect.value
-        });
-
-        window.location.href = `order.html?${query.toString()}`;
-      });
-
-      info.append(orderButton);
-      card.append(gallery, info);
-      grid.append(card);
+    filtered.forEach((product) => {
+      grid.appendChild(createProductCard(product));
     });
   }
 
   async function loadProducts() {
-    const grid = document.getElementById("grid");
     const db = window.maaziSupabase;
 
     if (!db) {
-      console.error("Supabase client not found. Check supabase.js.");
-      if (grid) {
-        grid.replaceChildren(
-          element("p", "", "Store connection unavailable. Please try again later.")
-        );
-      }
+      showStatus(
+        "Store connection nahi ho saka. supabase.js configuration check karein.",
+        true
+      );
       return;
     }
 
-    if (grid) {
-      grid.replaceChildren(
-        element("p", "", "Loading products...")
-      );
-    }
+    showStatus("Loading your collection...");
 
     try {
       const { data: productRows, error: productError } = await db
         .from("products")
-        .select("id, name, price, description, images, is_active, created_at")
+        .select("id,name,price,description,images,is_active,created_at")
+        .eq("is_active", true)
         .order("created_at", { ascending: false });
 
       if (productError) throw productError;
 
-      const activeRows = (productRows || []).filter(
-        product => product.is_active !== false
-      );
+      const activeProducts = productRows || [];
+      let variantRows = [];
 
-      let variantsByProduct = {};
-
-      if (activeRows.length) {
-        const { data: variants, error: variantsError } = await db
+      if (activeProducts.length) {
+        const { data, error: variantError } = await db
           .from("product_variants")
-          .select("product_id, size, stock")
-          .in("product_id", activeRows.map(product => product.id));
+          .select("id,product_id,size,color,stock")
+          .in("product_id", activeProducts.map((product) => product.id));
 
-        if (variantsError) {
-          console.error("Could not load product sizes:", variantsError.message);
-        } else {
-          (variants || []).forEach(variant => {
-            if (!variantsByProduct[variant.product_id]) {
-              variantsByProduct[variant.product_id] = [];
-            }
-
-            const size = String(variant.size || "").trim();
-
-            if (
-              size &&
-              Number(variant.stock) > 0 &&
-              !variantsByProduct[variant.product_id].includes(size)
-            ) {
-              variantsByProduct[variant.product_id].push(size);
-            }
-          });
-        }
+        if (variantError) throw variantError;
+        variantRows = data || [];
       }
 
-      products = activeRows.map(product => ({
+      products = activeProducts.map((product) => ({
         id: product.id,
         name: product.name || "Winter Collection",
         price: Number(product.price) || 0,
-        sizes: variantsByProduct[product.id] || [],
+        description: product.description || "",
         photos: normalizeImages(product.images),
-        description: product.description || ""
+        variants: variantRows
+          .filter((variant) => variant.product_id === product.id)
+          .map((variant) => ({
+            id: variant.id,
+            size: variant.size || "",
+            color: variant.color || "",
+            stock: Math.max(0, Number(variant.stock) || 0)
+          }))
       }));
 
       renderProducts();
 
-    } catch (error) {
-      console.error("Product loading error:", error);
-
-      if (grid) {
-        grid.replaceChildren(
-          element(
-            "p",
-            "",
-            "Products could not be loaded. Please try again later."
-          )
-        );
-      }
-    }
-  }
-
-  function initSearch() {
-    const search = document.getElementById("search");
-    if (!search) return;
-
-    search.addEventListener("input", () => {
-      const term = search.value.trim().toLowerCase();
-
-      renderProducts(
-        products.filter(product =>
-          product.name.toLowerCase().includes(term)
-        )
+      showStatus(
+        products.length
+          ? products.length + " product(s) in our collection"
+          : "Abhi koi active product available nahi hai."
       );
-    });
-  }
-
-  function initSnowfall() {
-    const snow = document.getElementById("snow");
-
-    if (
-      !snow ||
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    ) {
-      return;
-    }
-
-    if (snow.dataset.initialized === "true") return;
-    snow.dataset.initialized = "true";
-
-    for (let i = 0; i < 35; i++) {
-      const flake = element("span", "snowflake", "❄");
-      flake.style.left = `${Math.random() * 100}%`;
-      flake.style.animationDuration = `${6 + Math.random() * 8}s`;
-      flake.style.animationDelay = `${-Math.random() * 12}s`;
-      flake.style.fontSize = `${9 + Math.random() * 12}px`;
-      snow.append(flake);
+    } catch (error) {
+      console.error("Storefront loading error:", error);
+      showStatus(
+        "Products load nahi ho sake. Database permissions aur table columns check karein.",
+        true
+      );
     }
   }
 
   function init() {
-    initSearch();
-    initSnowfall();
+    const search = $("search");
+
+    if (search) {
+      search.addEventListener("input", () => {
+        searchText = search.value.trim().toLowerCase();
+        renderProducts();
+      });
+    }
+
     loadProducts();
   }
 
-  return {
-    init,
-    loadProducts,
-    renderProducts
-  };
+  document.addEventListener("DOMContentLoaded", init);
 })();
-
-document.addEventListener("DOMContentLoaded", StoreApp.init);
