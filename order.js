@@ -350,7 +350,16 @@ async function submitOrder(event) {
       .select("id,order_number")
       .single();
 
-    if (orderError) throw orderError;
+    if (orderError) {
+  console.error("Order insert error:", orderError);
+
+  throw new Error(
+    "Code: " + (orderError.code || "N/A") +
+    " | Message: " + orderError.message +
+    " | Details: " + (orderError.details || "N/A") +
+    " | Hint: " + (orderError.hint || "N/A")
+  );
+}
 
     createdOrderId = order.id;
 
