@@ -8,8 +8,16 @@ let reviews = [];
 let photoFiles = [];
 
 function message(text, error = false) {
-  const el = $("message");
+  const loginPanel = $("login-panel");
+  const isLoggedOut = loginPanel &&
+    loginPanel.style.display !== "none";
+
+  const el = isLoggedOut
+    ? $("login-message")
+    : $("message");
+
   if (!el) return;
+
   el.textContent = text;
   el.style.color = error ? "#ff8b8b" : "#e4c477";
 }
