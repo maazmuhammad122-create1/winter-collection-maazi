@@ -136,7 +136,11 @@
     .panel h2 { font-size: 25px; }
     .panel h3 { font-size: 21px; }
 
-    .muted { color: var(--muted); font-size: 12px; line-height: 1.7; }
+    .muted {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.7;
+    }
 
     .form-grid {
       display: grid;
@@ -382,7 +386,8 @@
 
         <div class="field">
           <label for="password">Password</label>
-          <input id="password" type="password" autocomplete="current-password"
+          <input id="password" type="password"
+                 autocomplete="current-password"
                  placeholder="Enter password" required>
         </div>
 
@@ -441,7 +446,8 @@
           <div class="form-grid">
             <div class="field">
               <label for="product-name">Product Name *</label>
-              <input id="product-name" required placeholder="e.g. Premium Winter Shirt">
+              <input id="product-name" required
+                     placeholder="e.g. Premium Winter Shirt">
             </div>
 
             <div class="field">
@@ -484,7 +490,8 @@
             <button class="btn" id="save-product-btn" type="submit">
               SAVE PRODUCT
             </button>
-            <button class="btn btn-secondary" id="reset-product-btn" type="button">
+            <button class="btn btn-secondary" id="reset-product-btn"
+                    type="button">
               CLEAR FORM
             </button>
           </div>
@@ -512,12 +519,12 @@
                  placeholder="Search order, customer or phone...">
           <select id="order-status-filter" aria-label="Filter orders">
             <option value="">All statuses</option>
-            <option value="Pending">Pending</option>
-            <option value="Confirmed">Confirmed</option>
-            <option value="Processing">Processing</option>
-            <option value="Shipped">Shipped</option>
-            <option value="Delivered">Delivered</option>
-            <option value="Cancelled">Cancelled</option>
+            <option value="pending">Pending</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="processing">Processing</option>
+            <option value="shipped">Shipped</option>
+            <option value="delivered">Delivered</option>
+            <option value="cancelled">Cancelled</option>
           </select>
         </div>
 
@@ -532,16 +539,11 @@
         <p class="muted">See customer feedback and ratings.</p>
 
         <div id="review-list" class="empty">
-          Customer reviews will appear here once connected to your database.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+          Customer reviews will appear here once connected to your database.
         </div>
       </section>
-<!-- Reviews section pehle se hai -->
-      <section class="panel">
-        <h2>Customer Reviews</h2>
-        <div id="review-list"></div>
-      </section>
 
-      <!-- YAHAN EASYPaisa SETTINGS KA CODE PASTE KARO -->
+      <!-- EASYPaisa PAYMENT SETTINGS -->
       <section class="panel" id="payment-settings">
         <h2>Easypaisa Payment Settings</h2>
 
@@ -563,7 +565,6 @@
         <p id="payment-settings-message" role="status"></p>
       </section>
 
-    <!-- Dashboard ka closing tag iske baad hai -->
       <p id="message" role="status" aria-live="polite"></p>
     </section>
   </main>
@@ -577,6 +578,7 @@
   <script>
     (() => {
       const snow = document.getElementById("snow");
+
       for (let i = 0; i < 35; i++) {
         const flake = document.createElement("span");
         flake.className = "flake";
@@ -599,9 +601,11 @@
 
           const img = document.createElement("img");
           img.alt = file.name;
+
           const url = URL.createObjectURL(file);
           img.src = url;
           img.onload = () => URL.revokeObjectURL(url);
+
           preview.appendChild(img);
         });
       });
