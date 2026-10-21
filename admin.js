@@ -27,12 +27,12 @@ function escapeHTML(value = "") {
 
 function showLogin() {
   $("login-form").style.display = "block";
-  $("dashboard").style.display = "none";
+  $("dashboard").style.display = "hidden";
 }
 
 function showDashboard() {
   $("login-form").style.display = "none";
-  $("dashboard").style.display = "block";
+  $("dashboard").style.display = "hidden";
 }
 
 async function loadProducts() {
