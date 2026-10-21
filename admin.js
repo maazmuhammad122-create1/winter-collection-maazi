@@ -254,6 +254,7 @@ async function refreshAll() {
   try {
     message("Loading dashboard...");
     await Promise.all([loadProducts(), loadOrders(), loadReviews()]);
+    await loadPaymentSettings();
     message("Dashboard updated.");
   } catch (error) {
     message(error.message || "Dashboard load failed.", true);
