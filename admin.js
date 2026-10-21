@@ -9,8 +9,8 @@ let photoFiles = [];
 
 function message(text, error = false) {
   const loginPanel = $("login-panel");
-  const isLoggedOut = loginPanel &&
-    loginPanel.style.display !== "none";
+  const isLoggedOut =
+    loginPanel && loginPanel.style.display !== "none";
 
   const el = isLoggedOut
     ? $("login-message")
@@ -28,20 +28,59 @@ function money(value) {
 
 function escapeHTML(value = "") {
   return String(value).replace(/[&<>"']/g, (c) => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;",
-    '"': "&quot;", "'": "&#39;"
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
   })[c]);
 }
 
 function showLogin() {
-  $("login-pannel").style.display = "block";
-  $("dashboard").style.display = "hidden";
+  $("login-panel").style.display = "block";
+  $("dashboard").classList.add("hidden");
 }
 
 function showDashboard() {
-  $("login-pannel").style.display = "none";
-  $("dashboard").style.display = "hidden";
+  $("login-panel").style.display = "none";
+  $("dashboard").classList.remove("hidden");
 }
+
+async function verifyAdmin() {
+  const {
+    data: { user },
+    error: userError
+  } = await db.auth.getUser();
+
+  if (userError) throw userError;
+  if (!user) throw new Error("User login verify nahi hua.");
+
+  const { data: admin, error: adminError } = await db
+    .from("admins")
+    .select("user_id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (adminError) {
+    throw new Error(
+      "Admin verification failed: " + adminError.message
+    );
+  }
+
+  if (!admin) {
+    await db.auth.signOut();
+    showLogin();
+    throw new Error(
+      "Yeh account admins table mein authorized nahi hai."
+    );
+  }
+
+  return user;
+}
+
+/* =========================
+   PRODUCTS
+========================= */
 
 async function loadProducts() {
   const { data, error } = await db
@@ -50,8 +89,10 @@ async function loadProducts() {
     .order("created_at", { ascending: false });
 
   if (error) throw error;
+
   products = data || [];
   renderProducts();
+
   $("stat-products").textContent = products.length;
 
   const { data: variants, error: variantError } = await db
@@ -60,66 +101,129 @@ async function loadProducts() {
 
   if (variantError) throw variantError;
 
-  $("stat-stock").textContent =
-    (variants || []).reduce((sum, v) => sum + Number(v.stock || 0), 0);
+  $("stat-stock").textContent = (variants || []).reduce(
+    (sum, variant) => sum + Number(variant.stock || 0),
+    0
+  );
 }
 
 function renderProducts() {
-  const term = ($("product-search").value || "").toLowerCase();
+  const term = ($("product-search").value || "")
+    .toLowerCase()
+    .trim();
+
   const list = $("product-list");
 
-  list.innerHTML = products
-    .filter(p => (p.name || "").toLowerCase().includes(term))
-    .map(p => `
-      <article class="card" style="padding:14px;margin-bottom:12px">
-        ${(p.images || []).map(url =>
-          `<img src="${escapeHTML(url)}" alt=""
-          style="width:65px;height:65px;object-fit:cover;margin:4px;border-radius:6px">`
-        ).join("")}
-        <h3>${escapeHTML(p.name)}</h3>
-        <p class="price">${money(p.price)}</p>
-        <p>${escapeHTML(p.category || "")}</p>
-        <p>${p.is_active ? "Active" : "Hidden"}</p>
-        <button data-edit="${p.id}">EDIT</button>
-        <button data-delete="${p.id}">DELETE</button>
-      </article>
-    `).join("") || "<p>No products found.</p>";
+  const filtered = products.filter((product) =>
+    (product.name || "").toLowerCase().includes(term)
+  );
+
+  list.innerHTML = filtered.map((product) => `
+    <article class="card"
+      style="padding:14px;margin-bottom:12px">
+
+      ${(Array.isArray(product.images) ? product.images : [])
+        .map((url) => `
+          <img
+            src="${escapeHTML(url)}"
+            alt="${escapeHTML(product.name || "Product photo")}"
+            loading="lazy"
+            style="width:65px;height:65px;object-fit:cover;
+                   margin:4px;border-radius:6px">
+        `).join("")}
+
+      <h3>${escapeHTML(product.name || "")}</h3>
+      <p class="price">${money(product.price)}</p>
+      <p>${escapeHTML(product.category || "")}</p>
+      <p>${product.is_active ? "Active" : "Hidden"}</p>
+
+      <button type="button" data-edit="${escapeHTML(product.id)}">
+        EDIT
+      </button>
+
+      <button type="button" data-delete="${escapeHTML(product.id)}">
+        DELETE
+      </button>
+    </article>
+  `).join("") || '<p class="empty">No products found.</p>';
 }
 
 async function saveProduct(event) {
   event.preventDefault();
-  message("Saving product...");
+
+  const saveButton = $("save-product-btn");
+  saveButton.disabled = true;
 
   try {
+    message("Saving product...");
+
     const id = $("product-id").value;
     const name = $("product-name").value.trim();
     const price = Number($("product-price").value);
-    const sizes = $("product-sizes").value
-      .split(",").map(s => s.trim()).filter(Boolean);
-    const stock = Math.max(0, Number($("product-stock").value) || 0);
+
+    const sizes = [
+      ...new Set(
+        $("product-sizes").value
+          .split(",")
+          .map((size) => size.trim())
+          .filter(Boolean)
+      )
+    ];
+
+    const stock = Number($("product-stock").value);
     const description = $("product-description").value.trim();
 
-    if (!name || !Number.isFinite(price) || price < 0) {
-      throw new Error("Product name aur valid price enter karo.");
+    if (!name) {
+      throw new Error("Product name enter karo.");
     }
 
-    const oldProduct = products.find(p => p.id === id);
-    const images = [...(oldProduct?.images || [])];
+    if (!Number.isFinite(price) || price < 0) {
+      throw new Error("Valid product price enter karo.");
+    }
 
+    if (!Number.isInteger(stock) || stock < 0) {
+      throw new Error("Stock zero ya positive whole number hona chahiye.");
+    }
+
+    const oldProduct = products.find(
+      (product) => String(product.id) === String(id)
+    );
+
+    const images = [
+      ...(Array.isArray(oldProduct?.images)
+        ? oldProduct.images
+        : [])
+    ];
+
+    // Upload selected photos to Supabase Storage.
     for (const file of photoFiles) {
-      const path = `${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+      if (!file.type.startsWith("image/")) {
+        throw new Error("Sirf image files upload kar sakte ho.");
+      }
+
+      const safeName = file.name.replace(
+        /[^a-zA-Z0-9._-]/g,
+        "_"
+      );
+
+      const uniqueName =
+        `${Date.now()}-${Math.random().toString(36).slice(2)}-${safeName}`;
 
       const { error: uploadError } = await db.storage
         .from("product-photos")
-        .upload(path, file, { upsert: false });
+        .upload(uniqueName, file, {
+          upsert: false
+        });
 
       if (uploadError) throw uploadError;
 
-      const { data } = db.storage
+      const { data: publicData } = db.storage
         .from("product-photos")
-        .getPublicUrl(path);
+        .getPublicUrl(uniqueName);
 
-      images.push(data.publicUrl);
+      if (publicData?.publicUrl) {
+        images.push(publicData.publicUrl);
+      }
     }
 
     const payload = {
@@ -133,17 +237,25 @@ async function saveProduct(event) {
     let productId = id;
 
     if (id) {
-      const { error } = await db.from("products")
-        .update(payload).eq("id", id);
+      const { error } = await db
+        .from("products")
+        .update(payload)
+        .eq("id", id);
+
       if (error) throw error;
     } else {
-      const { data, error } = await db.from("products")
-        .insert(payload).select().single();
+      const { data, error } = await db
+        .from("products")
+        .insert(payload)
+        .select()
+        .single();
+
       if (error) throw error;
+
       productId = data.id;
     }
 
-    // Keep existing variants and update stock for each requested size.
+    // Create or update variants for the sizes entered.
     for (const size of sizes) {
       const { data: existing, error } = await db
         .from("product_variants")
@@ -159,6 +271,7 @@ async function saveProduct(event) {
           .from("product_variants")
           .update({ stock })
           .eq("id", existing[0].id);
+
         if (updateError) throw updateError;
       } else {
         const { error: insertError } = await db
@@ -169,279 +282,217 @@ async function saveProduct(event) {
             color: "",
             stock
           });
+
         if (insertError) throw insertError;
       }
     }
 
     $("product-form").reset();
     $("product-id").value = "";
+    $("photo-preview").replaceChildren();
     photoFiles = [];
-    $("photo-preview").innerHTML = "";
+
     await loadProducts();
     message("Product saved successfully!");
+
   } catch (error) {
-    message(error.message || "Product save nahi hua.", true);
+    message(
+      "Product save error: " +
+      (error.message || "Product save nahi hua."),
+      true
+    );
+  } finally {
+    saveButton.disabled = false;
   }
 }
 
+/* =========================
+   ORDERS
+========================= */
+
 async function loadOrders() {
-  const { data, error } = await db.from("orders")
-    .select("*").order("created_at", { ascending: false });
+  const { data, error } = await db
+    .from("orders")
+    .select("*")
+    .order("created_at", { ascending: false });
 
   if (error) throw error;
+
   orders = data || [];
   $("stat-orders").textContent = orders.length;
+
   renderOrders();
 }
 
 function renderOrders() {
-  const term = ($("order-search").value || "").toLowerCase();
-  const status = $("order-status-filter").value;
+  const term = ($("order-search").value || "")
+    .toLowerCase()
+    .trim();
 
-  $("order-list").innerHTML = orders
-    .filter(o =>
-      (!status || o.status === status) &&
-      `${o.order_number || ""} ${o.customer_name || ""} ${o.phone || ""}`
-        .toLowerCase().includes(term)
-    )
-    .map(o => `
-      <article class="card" style="padding:14px;margin-bottom:12px">
-        <h3>Order ${escapeHTML(o.order_number || o.id)}</h3>
-        <p>${escapeHTML(o.customer_name)} · ${escapeHTML(o.phone)}</p>
-        <p>${escapeHTML(o.city || "")} — ${escapeHTML(o.address || "")}</p>
-        <p class="price">${money(o.total)}</p>
-        <p>Advance: ${money(o.advance_amount)} · Due: ${money(o.balance_due)}</p>
-        <p>Payment: ${escapeHTML(o.payment_status || "")}</p>
-        <p>Transaction: ${escapeHTML(o.transaction_id || "")}</p>
-        <p>Current status: ${escapeHTML(o.status || "")}</p>
-        <select id="status-${o.id}">
-          ${["pending","confirmed","processing","shipped","delivered","cancelled"]
-            .map(s => `<option value="${s}" ${o.status === s ? "selected" : ""}>${s}</option>`)
-            .join("")}
+  const status = $("order-status-filter").value.toLowerCase();
+
+  const filtered = orders.filter((order) => {
+    const orderStatus = String(order.status || "").toLowerCase();
+
+    const searchText = [
+      order.order_number,
+      order.customer_name,
+      order.phone
+    ].join(" ").toLowerCase();
+
+    return (
+      (!status || orderStatus === status) &&
+      searchText.includes(term)
+    );
+  });
+
+  $("order-list").innerHTML = filtered.map((order) => {
+    const currentStatus = String(
+      order.status || "pending"
+    ).toLowerCase();
+
+    const statuses = [
+      "pending",
+      "confirmed",
+      "processing",
+      "shipped",
+      "delivered",
+      "cancelled"
+    ];
+
+    return `
+      <article class="card"
+        style="padding:14px;margin-bottom:12px">
+
+        <h3>Order ${escapeHTML(order.order_number || order.id)}</h3>
+
+        <p>
+          ${escapeHTML(order.customer_name || "")}
+          · ${escapeHTML(order.phone || "")}
+        </p>
+
+        <p>
+          ${escapeHTML(order.city || "")}
+          — ${escapeHTML(order.address || "")}
+        </p>
+
+        <p class="price">${money(order.total)}</p>
+
+        <p>
+          Advance: ${money(order.advance_amount)}
+          · Due: ${money(order.balance_due)}
+        </p>
+
+        <p>Payment: ${escapeHTML(order.payment_status || "")}</p>
+        <p>Transaction: ${escapeHTML(order.transaction_id || "")}</p>
+        <p>Current status: ${escapeHTML(order.status || "pending")}</p>
+
+        <label for="status-${escapeHTML(order.id)}">
+          Update order status
+        </label>
+
+        <select id="status-${escapeHTML(order.id)}">
+          ${statuses.map((value) => `
+            <option value="${value}"
+              ${currentStatus === value ? "selected" : ""}>
+              ${value.charAt(0).toUpperCase() + value.slice(1)}
+            </option>
+          `).join("")}
         </select>
-        <textarea id="note-${o.id}" placeholder="Admin note">${escapeHTML(o.admin_note || "")}</textarea>
-        <button data-order-save="${o.id}">SAVE ORDER UPDATE</button>
+
+        <label for="note-${escapeHTML(order.id)}">
+          Admin note
+        </label>
+
+        <textarea id="note-${escapeHTML(order.id)}"
+          placeholder="Admin note">${escapeHTML(order.admin_note || "")}</textarea>
+
+        <button type="button"
+          data-order-save="${escapeHTML(order.id)}">
+          SAVE ORDER UPDATE
+        </button>
       </article>
-    `).join("") || "<p>No orders found.</p>";
+    `;
+  }).join("") || '<p class="empty">No orders found.</p>';
 }
 
 async function updateOrder(id) {
-  const status = $(`status-${id}`).value;
-  const admin_note = $(`note-${id}`).value;
+  const statusField = $(`status-${id}`);
+  const noteField = $(`note-${id}`);
 
-  const { error } = await db.from("orders")
-    .update({ status, admin_note }).eq("id", id);
+  if (!statusField || !noteField) {
+    throw new Error("Order fields nahi milay.");
+  }
+
+  const { error } = await db
+    .from("orders")
+    .update({
+      status: statusField.value,
+      admin_note: noteField.value.trim()
+    })
+    .eq("id", id);
 
   if (error) throw error;
-  message("Order updated.");
+
   await loadOrders();
+  message("Order updated successfully.");
 }
 
+/* =========================
+   CUSTOMER REVIEWS
+========================= */
+
 async function loadReviews() {
-  const { data, error } = await db.from("reviews")
-    .select("*").order("created_at", { ascending: false });
+  const { data, error } = await db
+    .from("reviews")
+    .select("*")
+    .order("created_at", { ascending: false });
 
   if (error) throw error;
+
   reviews = data || [];
   $("stat-reviews").textContent = reviews.length;
 
-  $("review-list").innerHTML = reviews.map(r => `
-    <article class="card" style="padding:14px;margin-bottom:12px">
-      <h3>${escapeHTML(r.customer_name)}</h3>
-      <p>Rating: ${Number(r.rating)}/5</p>
-      <p>${escapeHTML(r.comment || "")}</p>
-      <p>${r.is_approved ? "Approved" : "Pending approval"}</p>
-      <button data-review="${r.id}" data-approved="${!r.is_approved}">
-        ${r.is_approved ? "HIDE REVIEW" : "APPROVE REVIEW"}
+  $("review-list").innerHTML = reviews.map((review) => `
+    <article class="card"
+      style="padding:14px;margin-bottom:12px">
+
+      <h3>${escapeHTML(review.customer_name || "Customer")}</h3>
+
+      <p>Rating: ${Number(review.rating || 0)}/5</p>
+
+      <p>${escapeHTML(review.comment || "")}</p>
+
+      <p>
+        ${review.is_approved ? "Approved" : "Pending approval"}
+      </p>
+
+      <button
+        type="button"
+        data-review="${escapeHTML(review.id)}"
+        data-approved="${!review.is_approved}">
+        ${review.is_approved ? "HIDE REVIEW" : "APPROVE REVIEW"}
       </button>
     </article>
-  `).join("") || "<p>No reviews yet.</p>";
+  `).join("") || '<p class="empty">No reviews yet.</p>';
 }
 
-async function refreshAll() {
-  try {
-    message("Loading dashboard...");
-    await Promise.all([loadProducts(), loadOrders(), loadReviews()]);
-    await loadPaymentSettings();
-    message("Dashboard updated.");
-  } catch (error) {
-    message(error.message || "Dashboard load failed.", true);
-  }
+async function updateReview(id, isApproved) {
+  const { error } = await db
+    .from("reviews")
+    .update({ is_approved: isApproved })
+    .eq("id", id);
+
+  if (error) throw error;
+
+  await loadReviews();
+  message("Review updated successfully.");
 }
 
-if (!db) {
-  message("Supabase configured nahi hai. supabase.js mein URL aur publishable key check karo.", true);
-} else {
-  $("login-form").addEventListener("submit", async event => {
-  event.preventDefault();
-  message("Logging in...");
+/* =========================
+   PAYMENT SETTINGS
+========================= */
 
-  try {
-    const { error } = await db.auth.signInWithPassword({
-      email: $("email").value.trim(),
-      password: $("password").value
-    });
-
-    if (error) throw error;
-
-    const { data: { user }, error: userError } =
-      await db.auth.getUser();
-
-    if (userError) throw userError;
-    if (!user) throw new Error("User verify nahi hua.");
-
-    const { data: admin, error: adminError } = await db
-      .from("admins")
-      .select("user_id")
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    if (adminError) throw adminError;
-
-    if (!admin) {
-      throw new Error("Admin record nahi mila: " + user.id);
-    }
-
-    showDashboard();
-    await refreshAll();
-
-  } catch (error) {
-    message("Login error: " + (error.message || "Unknown error"), true);
-  }
-});
-    if (error) {
-      message(error.message, true);
-      return;
-    }
-const { data: { user }, error: userError } = await db.auth.getUser();
-
-if (userError || !user) {
-  message("User verify nahi hua: " + (userError?.message || "User missing"), true);
-  return;
-}
-
-const { data: admin, error: adminError } = await db
-  .from("admins")
-  .select("user_id")
-  .eq("user_id", user.id)
-  .maybeSingle();
-
-if (adminError) {
-  message("Admins table error: " + adminError.message, true);
-  return;
-}
-
-if (!admin) {
-  message("Admin record nahi mila. User ID: " + user.id, true);
-  return;
-}
-    
-
-    showDashboard();
-    await refreshAll();
-  });
-
-  $("product-form").addEventListener("submit", saveProduct);
-  $("product-search").addEventListener("input", renderProducts);
-  $("order-search").addEventListener("input", renderOrders);
-  $("order-status-filter").addEventListener("change", renderOrders);
-  $("refresh-btn").addEventListener("click", refreshAll);
-
-  $("logout-btn").addEventListener("click", async () => {
-    await db.auth.signOut();
-    showLogin();
-  });
-
-  $("reset-product-btn").addEventListener("click", () => {
-    $("product-form").reset();
-    $("product-id").value = "";
-    photoFiles = [];
-    $("photo-preview").innerHTML = "";
-  });
-
-  $("product-photos").addEventListener("change", event => {
-    photoFiles = Array.from(event.target.files || []);
-  });
-
-  $("product-list").addEventListener("click", async event => {
-    const editId = event.target.dataset.edit;
-    const deleteId = event.target.dataset.delete;
-
-    try {
-      if (editId) {
-        const p = products.find(item => item.id === editId);
-        if (!p) return;
-
-        $("product-id").value = p.id;
-        $("product-name").value = p.name || "";
-        $("product-price").value = p.price || 0;
-        $("product-description").value = p.description || "";
-
-        const { data: variants, error } = await db
-          .from("product_variants").select("size,stock")
-          .eq("product_id", p.id);
-        if (error) throw error;
-
-        $("product-sizes").value = (variants || []).map(v => v.size).join(", ");
-        $("product-stock").value = variants?.[0]?.stock || 0;
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }
-
-      if (deleteId && confirm("Is product ko delete karna hai?")) {
-        const { error: variantError } = await db
-          .from("product_variants").delete().eq("product_id", deleteId);
-        if (variantError) throw variantError;
-
-        const { error } = await db.from("products")
-          .delete().eq("id", deleteId);
-        if (error) throw error;
-
-        await loadProducts();
-        message("Product deleted.");
-      }
-    } catch (error) {
-      message(error.message, true);
-    }
-  });
-
-  $("order-list").addEventListener("click", async event => {
-    const id = event.target.dataset.orderSave;
-    if (!id) return;
-    try {
-      await updateOrder(id);
-    } catch (error) {
-      message(error.message, true);
-    }
-  });
-
-  $("review-list").addEventListener("click", async event => {
-    const id = event.target.dataset.review;
-    if (!id) return;
-
-    try {
-      const is_approved = event.target.dataset.approved === "true";
-      const { error } = await db.from("reviews")
-        .update({ is_approved }).eq("id", id);
-      if (error) throw error;
-      await loadReviews();
-      message("Review updated.");
-    } catch (error) {
-      message(error.message, true);
-    }
-  });
-
-  db.auth.getSession().then(async ({ data }) => {
-    if (!data.session) return;
-    const { data: { user } } = await db.auth.getUser();
-    const { data: admin } = await db.from("admins")
-      .select("user_id").eq("user_id", user.id).maybeSingle();
-
-    if (admin) {
-      showDashboard();
-      await refreshAll();
-    }
-  });
-}
 async function loadPaymentSettings() {
   const { data, error } = await db
     .from("settings")
@@ -455,17 +506,27 @@ async function loadPaymentSettings() {
   if (error) throw error;
 
   const settings = Object.fromEntries(
-    (data || []).map(item => [item.key, item.value])
+    (data || []).map((item) => [
+      item.key,
+      item.value
+    ])
   );
 
-  $("easypaisa-title").value = settings.easypaisa_title || "";
-  $("easypaisa-number").value = settings.easypaisa_number || "";
+  $("easypaisa-title").value =
+    settings.easypaisa_title || "";
+
+  $("easypaisa-number").value =
+    settings.easypaisa_number || "";
+
   $("advance-instructions").value =
     settings.advance_instructions || "";
 }
 
 async function savePaymentSettings() {
   const msg = $("payment-settings-message");
+  const button = $("save-payment-settings");
+
+  button.disabled = true;
   msg.textContent = "Saving...";
 
   try {
@@ -493,14 +554,270 @@ async function savePaymentSettings() {
     }
 
     msg.textContent = "Settings saved successfully!";
+    msg.style.color = "#e4c477";
+
   } catch (error) {
     msg.textContent = "Error: " + error.message;
+    msg.style.color = "#ff8b8b";
+  } finally {
+    button.disabled = false;
   }
 }
 
-if (db) {
+/* =========================
+   DASHBOARD REFRESH
+========================= */
+
+async function refreshAll() {
+  try {
+    message("Loading dashboard...");
+
+    await Promise.all([
+      loadProducts(),
+      loadOrders(),
+      loadReviews(),
+      loadPaymentSettings()
+    ]);
+
+    message("Dashboard updated.");
+
+  } catch (error) {
+    message(
+      "Dashboard error: " +
+      (error.message || "Data load nahi hua."),
+      true
+    );
+  }
+}
+
+/* =========================
+   INITIALIZATION & EVENTS
+========================= */
+
+async function initializeDashboard() {
+  try {
+    await verifyAdmin();
+    showDashboard();
+    await refreshAll();
+  } catch (error) {
+    showLogin();
+    message(error.message || "Admin verification failed.", true);
+  }
+}
+
+if (!db) {
+  message(
+    "Supabase configured nahi hai. supabase.js mein URL aur publishable key check karo.",
+    true
+  );
+} else {
+  // Login
+  $("login-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const loginButton = event.submitter;
+    if (loginButton) loginButton.disabled = true;
+
+    $("login-message").textContent = "Logging in...";
+
+    try {
+      const { error } = await db.auth.signInWithPassword({
+        email: $("email").value.trim(),
+        password: $("password").value
+      });
+
+      if (error) throw error;
+
+      await initializeDashboard();
+
+    } catch (error) {
+      showLogin();
+      message(
+        "Login error: " + (error.message || "Unknown error"),
+        true
+      );
+    } finally {
+      if (loginButton) loginButton.disabled = false;
+    }
+  });
+
+  // Product form
+  $("product-form").addEventListener("submit", saveProduct);
+
+  $("product-search").addEventListener("input", renderProducts);
+
+  $("order-search").addEventListener("input", renderOrders);
+
+  $("order-status-filter").addEventListener(
+    "change",
+    renderOrders
+  );
+
+  $("refresh-btn").addEventListener("click", refreshAll);
+
+  // Logout
+  $("logout-btn").addEventListener("click", async () => {
+    try {
+      const { error } = await db.auth.signOut();
+      if (error) throw error;
+
+      products = [];
+      orders = [];
+      reviews = [];
+      photoFiles = [];
+
+      showLogin();
+      $("login-message").textContent = "You have logged out.";
+
+    } catch (error) {
+      message("Logout error: " + error.message, true);
+    }
+  });
+
+  // Clear product form
+  $("reset-product-btn").addEventListener("click", () => {
+    $("product-form").reset();
+    $("product-id").value = "";
+    $("photo-preview").replaceChildren();
+    photoFiles = [];
+  });
+
+  // Track selected photos
+  $("product-photos").addEventListener("change", (event) => {
+    photoFiles = Array.from(event.target.files || []);
+  });
+
+  // Edit and delete products
+  $("product-list").addEventListener("click", async (event) => {
+    const button = event.target.closest("button");
+    if (!button) return;
+
+    const editId = button.dataset.edit;
+    const deleteId = button.dataset.delete;
+
+    try {
+      if (editId) {
+        const product = products.find(
+          (item) => String(item.id) === String(editId)
+        );
+
+        if (!product) return;
+
+        $("product-id").value = product.id;
+        $("product-name").value = product.name || "";
+        $("product-price").value = product.price ?? 0;
+        $("product-description").value =
+          product.description || "";
+
+        $("product-photos").value = "";
+        $("photo-preview").replaceChildren();
+        photoFiles = [];
+
+        const { data: variants, error } = await db
+          .from("product_variants")
+          .select("size, stock")
+          .eq("product_id", product.id);
+
+        if (error) throw error;
+
+        $("product-sizes").value = (variants || [])
+          .map((variant) => variant.size)
+          .filter(Boolean)
+          .join(", ");
+
+        $("product-stock").value =
+          variants?.[0]?.stock ?? 0;
+
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth"
+        });
+      }
+
+      if (
+        deleteId &&
+        confirm("Is product ko delete karna hai?")
+      ) {
+        // Delete variants first to avoid foreign-key conflicts.
+        const { error: variantError } = await db
+          .from("product_variants")
+          .delete()
+          .eq("product_id", deleteId);
+
+        if (variantError) throw variantError;
+
+        const { error } = await db
+          .from("products")
+          .delete()
+          .eq("id", deleteId);
+
+        if (error) throw error;
+
+        await loadProducts();
+        message("Product deleted successfully.");
+      }
+
+    } catch (error) {
+      message(
+        "Product error: " + (error.message || "Operation failed."),
+        true
+      );
+    }
+  });
+
+  // Update orders
+  $("order-list").addEventListener("click", async (event) => {
+    const button = event.target.closest("button[data-order-save]");
+    if (!button) return;
+
+    try {
+      button.disabled = true;
+      await updateOrder(button.dataset.orderSave);
+    } catch (error) {
+      message("Order error: " + error.message, true);
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  // Approve or hide reviews
+  $("review-list").addEventListener("click", async (event) => {
+    const button = event.target.closest("button[data-review]");
+    if (!button) return;
+
+    try {
+      button.disabled = true;
+
+      await updateReview(
+        button.dataset.review,
+        button.dataset.approved === "true"
+      );
+
+    } catch (error) {
+      message("Review error: " + error.message, true);
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  // Save payment settings
   $("save-payment-settings").addEventListener(
     "click",
     savePaymentSettings
   );
+
+  // Restore an existing session, if authorized.
+  db.auth.getSession().then(async ({ data, error }) => {
+    if (error) {
+      showLogin();
+      message("Session error: " + error.message, true);
+      return;
+    }
+
+    if (data.session) {
+      await initializeDashboard();
+    } else {
+      showLogin();
+    }
+  });
 }
