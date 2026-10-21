@@ -193,7 +193,7 @@ async function submitOrder(event) {
       payment_status: paymentMethod === "COD" ? "pending" : "verification_pending",
       transaction_id: transactionId,
       payment_proof_url: proofPath,
-      payment_deadline: null,
+      payment_deadline: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), ,
       admin_note: null
     };
 
