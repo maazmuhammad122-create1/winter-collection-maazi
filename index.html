@@ -18,16 +18,19 @@
     .search{width:100%;padding:14px;border:1px solid #b89548;background:#161616;color:white;border-radius:8px}
     .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:20px}
     .card{border:1px solid #554522;border-radius:10px;overflow:hidden;background:#141414}
-    .placeholder{height:160px;display:grid;place-items:center;background:linear-gradient(145deg,#27231a,#111);color:#d8b76a}
+    .gallery{display:flex;flex-direction:column;gap:4px}
+    .gallery img{display:block;width:100%;height:auto;max-height:360px;object-fit:contain;background:#111}
+    .placeholder{min-height:160px;display:grid;place-items:center;background:linear-gradient(145deg,#27231a,#111);color:#d8b76a}
     .info{padding:12px}
     .info h3{margin:4px 0 10px}
     .price{color:#e4c477;font-weight:bold}
     button,.order{display:block;width:100%;padding:12px;margin-top:12px;background:#c6a354;color:#090909;border:0;border-radius:6px;font-weight:bold;text-decoration:none;text-align:center;cursor:pointer}
+    button:disabled{opacity:.5;cursor:not-allowed}
     #snow{position:fixed;inset:0;pointer-events:none;z-index:5;overflow:hidden}
     .flake{position:absolute;top:-15px;color:white;animation:fall linear infinite;opacity:.65}
     @keyframes fall{to{transform:translateY(110vh) rotate(360deg)}}
     footer{text-align:center;padding:30px;color:#c5bda9}
-    @media(min-width:700px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}.placeholder{height:220px}}
+    @media(min-width:700px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}.placeholder{min-height:220px}}
   </style>
 </head>
 <body>
@@ -44,54 +47,189 @@
   <main class="products" id="products">
     <h2>Our Collection</h2>
     <input class="search" id="search" placeholder="Search products..." aria-label="Search products">
-    <div class="grid" id="grid"></div>
+    <div class="grid" id="grid">
+      <p>Loading products...</p>
+    </div>
   </main>
   <footer>Winter Collection by Maazi · Contact us for help with your order.</footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
   <script>
-    const demoProducts = [
-      {name:"Winter Shirt",price:2800,sizes:["M","L","XL"]},
-      {name:"Classic Winter Shirt",price:2800,sizes:["M","L","XL"]}
-    ];
-    const grid=document.getElementById("grid");
-    function render(items){
-      grid.innerHTML="";
-      items.forEach(p=>{
-        const card=document.createElement("article");
-        card.className="card";
-        const placeholder=document.createElement("div");
-        placeholder.className="placeholder";
-        placeholder.textContent="WINTER COLLECTION";
-        const info=document.createElement("div");
-        info.className="info";
-        const title=document.createElement("h3");
-        title.textContent=p.name;
-        const price=document.createElement("div");
-        price.className="price";
-        price.textContent="PKR "+p.price;
-        const sizes=document.createElement("p");
-        sizes.textContent="Sizes: "+p.sizes.join(", ");
-        const btn=document.createElement("button");
-        btn.textContent="ORDER NOW";
-        btn.onclick=()=>alert("Order form will be connected in the next setup step.");
-        info.append(title,price,sizes,btn);
-        card.append(placeholder,info);
+    const grid = document.getElementById("grid");
+    const search = document.getElementById("search");
+    let products = [];
+
+    function make(tag, className, text) {
+      const el = document.createElement(tag);
+      if (className) el.className = className;
+      if (text !== undefined) el.textContent = text;
+      return el;
+    }
+
+    function getImages(images) {
+      if (!images) return [];
+      if (typeof images === "string") {
+        try { images = JSON.parse(images); }
+        catch { return images.startsWith("http") ? [images] : []; }
+      }
+      if (!Array.isArray(images)) return [];
+      return images.map(item => {
+        if (typeof item === "string") return item;
+        if (item && typeof item.url === "string") return item.url;
+        return "";
+      }).filter(url => url.startsWith("https://") || url.startsWith("http://"));
+    }
+
+    function render(list) {
+      grid.replaceChildren();
+
+      if (!list.length) {
+        grid.append(make("p", "", "No active products found."));
+        return;
+      }
+
+      list.forEach(product => {
+        const card = make("article", "card");
+        const gallery = make("div", "gallery");
+
+        if (product.photos.length) {
+          product.photos.forEach(url => {
+            const img = make("img");
+            img.src = url;
+            img.alt = product.name;
+            img.loading = "lazy";
+            gallery.append(img);
+          });
+        } else {
+          gallery.append(make("div", "placeholder", "WINTER COLLECTION"));
+        }
+
+        const info = make("div", "info");
+        info.append(make("h3", "", product.name));
+        info.append(make("div", "price", "PKR " + product.price.toLocaleString()));
+
+        if (product.description) {
+          info.append(make("p", "", product.description));
+        }
+
+        const sizes = make("select");
+        sizes.setAttribute("aria-label", "Select size for " + product.name);
+        product.sizes.forEach(size => {
+          sizes.append(make("option", "", size));
+          sizes.lastChild.value = size;
+        });
+
+        if (!product.sizes.length) {
+          const option = make("option", "", "Size unavailable");
+          option.value = "";
+          option.disabled = true;
+          option.selected = true;
+          sizes.append(option);
+          sizes.disabled = true;
+        }
+
+        const sizeLabel = make("label", "", "Select size");
+        sizeLabel.append(sizes);
+        sizeLabel.style.display = "grid";
+        sizeLabel.style.gap = "8px";
+        sizeLabel.style.marginTop = "12px";
+        info.append(sizeLabel);
+
+        const btn = make("button", "", "ORDER NOW");
+        btn.type = "button";
+        btn.disabled = !product.sizes.length;
+        btn.onclick = () => {
+          if (!sizes.value) return;
+          const query = new URLSearchParams({
+            product: product.name,
+            size: sizes.value
+          });
+          window.location.href = "order.html?" + query.toString();
+        };
+
+        info.append(btn);
+        card.append(gallery, info);
         grid.append(card);
       });
     }
-    render(demoProducts);
-    document.getElementById("search").addEventListener("input",e=>{
-      render(demoProducts.filter(p=>p.name.toLowerCase().includes(e.target.value.toLowerCase())));
-    });
-    const snow=document.getElementById("snow");
-    for(let i=0;i<35;i++){
-      const f=document.createElement("span");
-      f.className="flake";f.textContent="❄";
-      f.style.left=Math.random()*100+"%";
-      f.style.animationDuration=(5+Math.random()*8)+"s";
-      f.style.animationDelay=(-Math.random()*12)+"s";
-      f.style.fontSize=(8+Math.random()*12)+"px";
-      snow.appendChild(f);
+
+    async function loadProducts() {
+      const db = window.maaziSupabase;
+
+      if (!db) {
+        grid.replaceChildren(make("p", "", "Store connection unavailable. Please check Supabase setup."));
+        return;
+      }
+
+      grid.replaceChildren(make("p", "", "Loading products..."));
+
+      try {
+        const { data, error } = await db
+          .from("products")
+          .select("id, name, price, description, images, is_active, created_at")
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
+        const active = (data || []).filter(p => p.is_active !== false);
+        let variantMap = {};
+
+        if (active.length) {
+          const { data: variants, error: variantError } = await db
+            .from("product_variants")
+            .select("product_id, size, stock")
+            .in("product_id", active.map(p => p.id));
+
+          if (variantError) {
+            console.error("Size loading error:", variantError);
+          } else {
+            (variants || []).forEach(v => {
+              const size = String(v.size || "").trim();
+              if (size && Number(v.stock) > 0) {
+                if (!variantMap[v.product_id]) variantMap[v.product_id] = [];
+                if (!variantMap[v.product_id].includes(size)) {
+                  variantMap[v.product_id].push(size);
+                }
+              }
+            });
+          }
+        }
+
+        products = active.map(p => ({
+          id: p.id,
+          name: p.name || "Winter Shirt",
+          price: Number(p.price) || 0,
+          description: p.description || "",
+          photos: getImages(p.images),
+          sizes: variantMap[p.id] || []
+        }));
+
+        render(products);
+      } catch (error) {
+        console.error("Store products error:", error);
+        grid.replaceChildren(make("p", "", "Products could not load. Please check the Supabase connection and policies."));
+      }
     }
+
+    search.addEventListener("input", () => {
+      const term = search.value.trim().toLowerCase();
+      render(products.filter(p => p.name.toLowerCase().includes(term)));
+    });
+
+    const snow = document.getElementById("snow");
+    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      for (let i = 0; i < 35; i++) {
+        const flake = make("span", "flake", "❄");
+        flake.style.left = Math.random() * 100 + "%";
+        flake.style.animationDuration = (5 + Math.random() * 8) + "s";
+        flake.style.animationDelay = (-Math.random() * 12) + "s";
+        flake.style.fontSize = (8 + Math.random() * 12) + "px";
+        snow.append(flake);
+      }
+    }
+
+    loadProducts();
   </script>
 </body>
 </html>
