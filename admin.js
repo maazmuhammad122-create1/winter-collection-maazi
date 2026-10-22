@@ -85,8 +85,8 @@ function renderProducts() {
           loading="lazy" style="width:65px;height:65px;object-fit:cover;margin:4px;border-radius:6px">
       `).join("")}
       <h3>${escapeHTML(p.name || "")}</h3>
-      <p class="price">${money(p.price)}</p>
-      <p>${escapeHTML(p.category || "")}</p>
+      <p class="price">${money(p.price)}${Number(p.old_price) > Number(p.price) ? ` <s style="opacity:.6">${money(p.old_price)}</s> · Sale` : ""}</p>
+      <p>Category: ${escapeHTML(p.category || "— (not set)")}</p>
       <p>${p.is_active ? "Active" : "Hidden"}</p>
       <button type="button" data-edit="${escapeHTML(p.id)}">EDIT</button>
       <button type="button" data-delete="${escapeHTML(p.id)}">DELETE</button>
@@ -161,9 +161,14 @@ async function saveProduct(event) {
     const name = $("product-name").value.trim();
     const price = Number($("product-price").value);
     const description = $("product-description").value.trim();
+    const category = $("product-category").value.trim();
+    const oldRaw = $("product-old-price").value.trim();
+    const old_price = oldRaw === "" ? null : Number(oldRaw);
 
     if (!name) throw new Error("Product name enter karo.");
     if (!Number.isFinite(price) || price < 0) throw new Error("Valid product price enter karo.");
+    if (old_price !== null && (!Number.isFinite(old_price) || old_price <= price))
+      throw new Error("Old price, current price se zyada honi chahiye (ya khali chhodein).");
 
     const sizes = readSizeRows();
     const old = products.find(p => String(p.id) === String(id));
@@ -182,7 +187,7 @@ async function saveProduct(event) {
       if (data?.publicUrl) images.push(data.publicUrl);
     }
 
-    const payload = { name, price, description, images, is_active: true };
+    const payload = { name, price, description, images, category: category || null, old_price, is_active: true };
     let productId = id;
 
     if (id) {
@@ -256,22 +261,24 @@ function renderOrders() {
     return (!status || String(o.status || "").toLowerCase() === status) && text.includes(term);
   });
 
-  const statuses = ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled"];
+  const statuses = ["payment_submitted", "pending_payment", "pending", "confirmed", "processing", "shipped", "delivered", "cancelled"];
   $("order-list").innerHTML = filtered.map(o => {
     const current = String(o.status || "pending").toLowerCase();
+    const options = statuses.includes(current) ? statuses : [current, ...statuses];
     return `
       <article class="card" style="padding:14px;margin-bottom:12px">
         <h3>Order ${escapeHTML(o.order_number || o.id)}</h3>
         <p>${escapeHTML(o.customer_name || "")} · ${escapeHTML(o.phone || "")}</p>
         <p>${escapeHTML(o.city || "")} — ${escapeHTML(o.address || "")}</p>
         <p class="price">${money(o.total)}</p>
-        <p>Advance: ${money(o.advance_amount)} · Due: ${money(o.balance_due)}</p>
+        <p>Advance: ${money(o.advance_amount)} · Due on delivery: ${money(o.balance_due)}</p>
         <p>Payment: ${escapeHTML(o.payment_status || "")}</p>
         <p>Transaction: ${escapeHTML(o.transaction_id || "")}</p>
+        ${o.payment_proof_url ? `<button type="button" data-proof="${escapeHTML(o.payment_proof_url)}">VIEW PAYMENT PROOF</button>` : "<p>No payment proof</p>"}
         <p>Current status: ${escapeHTML(o.status || "pending")}</p>
         <label for="status-${escapeHTML(o.id)}">Update order status</label>
         <select id="status-${escapeHTML(o.id)}">
-          ${statuses.map(s => `<option value="${s}" ${current === s ? "selected" : ""}>${s}</option>`).join("")}
+          ${options.map(s => `<option value="${s}" ${current === s ? "selected" : ""}>${s}</option>`).join("")}
         </select>
         <label for="note-${escapeHTML(o.id)}">Admin note</label>
         <textarea id="note-${escapeHTML(o.id)}" placeholder="Admin note">${escapeHTML(o.admin_note || "")}</textarea>
@@ -485,6 +492,8 @@ if (!db) {
         $("product-id").value = p.id;
         $("product-name").value = p.name || "";
         $("product-price").value = p.price ?? 0;
+        $("product-category").value = p.category || "";
+        $("product-old-price").value = p.old_price ?? "";
         $("product-description").value = p.description || "";
         $("product-photos").value = "";
         $("photo-preview").replaceChildren();
@@ -519,6 +528,20 @@ if (!db) {
   });
 
   $("order-list").addEventListener("click", async event => {
+    const proofBtn = event.target.closest("button[data-proof]");
+    if (proofBtn) {
+      const w = window.open("", "_blank");
+      const { data, error } = await db.storage
+        .from("payment-proofs").createSignedUrl(proofBtn.dataset.proof, 300);
+      if (error || !data) {
+        if (w) w.close();
+        message("Proof error: " + (error?.message || "link nahi ban saka"), true);
+        return;
+      }
+      if (w) w.location.href = data.signedUrl;
+      return;
+    }
+
     const button = event.target.closest("button[data-order-save]");
     if (!button) return;
     button.disabled = true;
