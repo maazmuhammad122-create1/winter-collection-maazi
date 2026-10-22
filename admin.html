@@ -3,15 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#0b0c0e">
+<meta name="theme-color" content="#0b0a08">
 <title>Admin Panel | Winter Collection by Maazi</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Jost:wght@300;400;500&display=swap">
 <link rel="stylesheet" href="style.css">
 </head>
 <body class="admin">
 <div id="snow" aria-hidden="true"></div>
 <div class="announcement">Maazi admin · Winter 2026</div>
-<header><h1>Winter Collection</h1><p>by Maazi · Admin panel</p></header>
+<header><h1>Winter Collection</h1><p>by Maazi</p></header>
 <main class="container">
 <section class="hero"><small>Private management area</small><h2>Manage your collection</h2><p>Products, stock, orders and reviews</p></section>
 
@@ -43,7 +42,7 @@
 
 <section class="panel tab-section" id="products">
 <h2>Product management</h2>
-<p class="muted">Add products, upload several photos from your phone gallery, and manage sizes, prices and stock.</p>
+<p class="muted">Add products, upload several photos from your phone gallery, and manage category, sizes, prices and stock.</p>
 <p id="edit-banner" class="notice hidden"></p>
 <form id="product-form">
 <input id="product-id" type="hidden">
@@ -51,11 +50,16 @@
 <div class="field"><label for="product-name">Product name *</label><input id="product-name" required placeholder="e.g. Premium winter shirt"></div>
 <div class="field"><label for="product-price">Price (PKR) *</label><input id="product-price" type="number" min="0" step="1" required placeholder="2800"></div>
 </div>
+<div class="form-grid">
+<div class="field"><label for="product-category">Category</label><input id="product-category" list="category-list" maxlength="60" placeholder="e.g. Shirts, Trousers, Winter Wear" autocomplete="off"><datalist id="category-list"><option value="Shirts"><option value="Trousers"><option value="Winter Wear"></datalist></div>
+<div class="field"><label for="product-old-price">Old price (PKR), optional</label><input id="product-old-price" type="number" min="0" step="1" placeholder="Fill only for a sale"></div>
+</div>
+<p class="muted">Category shop ke sidebar mein dikhti hai. Old price bharne par product "Sale" mein aur kati hui price ke saath dikhta hai.</p>
 <input id="product-sizes" type="hidden"><input id="product-stock" type="hidden" value="0">
 <div class="field"><label>Sizes and stock *</label>
 <div id="size-rows"></div>
 <button class="btn btn-secondary" id="add-size" type="button">+ Add size</button>
-<p class="muted">Har size ke saamne uska stock likhein, jaisay Medium 1, Large 2.</p></div>
+<p class="muted">Har size ke saamne uska stock likhein, jaisay M 1, L 2.</p></div>
 <div class="field"><label for="product-description">Product description</label><textarea id="product-description" rows="3" placeholder="Product details..."></textarea></div>
 <div class="field"><label for="product-photos">Product photos from phone gallery</label>
 <input id="product-photos" type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple>
@@ -76,11 +80,11 @@
 
 <section class="panel tab-section" id="orders">
 <h2>Customer orders</h2>
-<p class="muted">Review orders and update their delivery status.</p>
+<p class="muted">Review orders, check the payment screenshot and update the delivery status.</p>
 <div class="toolbar">
 <input id="order-search" type="search" placeholder="Search order, customer or phone...">
 <select id="order-status-filter" aria-label="Filter orders">
-<option value="">All statuses</option><option value="pending">Pending</option><option value="confirmed">Confirmed</option><option value="processing">Processing</option><option value="shipped">Shipped</option><option value="delivered">Delivered</option><option value="cancelled">Cancelled</option>
+<option value="">All statuses</option><option value="payment_submitted">Payment submitted</option><option value="pending_payment">Pending payment</option><option value="pending">Pending</option><option value="confirmed">Confirmed</option><option value="processing">Processing</option><option value="shipped">Shipped</option><option value="delivered">Delivered</option><option value="cancelled">Cancelled</option>
 </select>
 </div>
 <div id="order-list" class="empty">Orders will appear here once connected to your database.</div>
