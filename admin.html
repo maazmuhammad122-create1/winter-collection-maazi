@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#f5f6f7">
+<meta name="theme-color" content="#0b0c0e">
 <title>Admin Panel | Winter Collection by Maazi</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Jost:wght@300;400;500&display=swap">
 <link rel="stylesheet" href="style.css">
@@ -44,14 +44,18 @@
 <section class="panel tab-section" id="products">
 <h2>Product management</h2>
 <p class="muted">Add products, upload several photos from your phone gallery, and manage sizes, prices and stock.</p>
+<p id="edit-banner" class="notice hidden"></p>
 <form id="product-form">
 <input id="product-id" type="hidden">
 <div class="form-grid">
 <div class="field"><label for="product-name">Product name *</label><input id="product-name" required placeholder="e.g. Premium winter shirt"></div>
 <div class="field"><label for="product-price">Price (PKR) *</label><input id="product-price" type="number" min="0" step="1" required placeholder="2800"></div>
-<div class="field"><label for="product-sizes">Sizes</label><input id="product-sizes" placeholder="M, L, XL"></div>
-<div class="field"><label for="product-stock">Total stock *</label><input id="product-stock" type="number" min="0" step="1" required value="0"></div>
 </div>
+<input id="product-sizes" type="hidden"><input id="product-stock" type="hidden" value="0">
+<div class="field"><label>Sizes and stock *</label>
+<div id="size-rows"></div>
+<button class="btn btn-secondary" id="add-size" type="button">+ Add size</button>
+<p class="muted">Har size ke saamne uska stock likhein, jaisay Medium 1, Large 2.</p></div>
 <div class="field"><label for="product-description">Product description</label><textarea id="product-description" rows="3" placeholder="Product details..."></textarea></div>
 <div class="field"><label for="product-photos">Product photos from phone gallery</label>
 <input id="product-photos" type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple>
@@ -111,5 +115,6 @@ fi.addEventListener("change",()=>{pv.replaceChildren();Array.from(fi.files||[]).
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase.js"></script>
 <script src="admin.js"></script>
+<script src="admin-fix.js"></script>
 </body>
 </html>
