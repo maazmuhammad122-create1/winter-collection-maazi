@@ -61,6 +61,7 @@
   async function build() {
     if ($("dashboard").classList.contains("hidden")) return;
     await loadStock();
+    await loadThumbs();
     const P = typeof products !== "undefined" ? products : [];
     const O = typeof orders !== "undefined" ? orders : [];
     const R = typeof reviews !== "undefined" ? reviews : [];
@@ -87,7 +88,7 @@
 
     $("dash-orders").innerHTML = O.slice(0, 5).map(o => {
       const [t, c] = lab(o);
-      return `<div class="row" data-oview="1"><div class="i"><b>#${esc(o.order_number || o.id)}</b><small>${esc(o.customer_name || "")} · ${rs(o.total)}</small></div><span class="bd b-${c}">${esc(t)}</span></div>`;
+      return `<div class="row" data-oview="1">${thumbHTML(o.id)}<div class="i"><b>#${esc(o.order_number || o.id)}</b><small>${esc(o.customer_name || "")}</small><small>${rs(o.total)}</small></div><div class="rt"><span class="bd b-${c}">${esc(t)}</span><small>${fmtD(o.created_at)}</small></div></div>`;
     }).join("") || '<p class="muted">Abhi koi order nahi.</p>';
 
     $("dash-products").innerHTML = P.slice(0, 5).map(p => {
@@ -95,7 +96,88 @@
       const b = s === 0 ? '<span class="bd b-bad">Sold out</span>' : s <= 3 ? '<span class="bd b-warn">Low Stock</span>' : '<span class="bd b-ok">In Stock</span>';
       return `<div class="pc" data-pedit="${esc(p.id)}"><div class="im">${img ? `<img src="${esc(img)}" alt="" loading="lazy">` : "No photo"}</div><b>${esc(p.name)}</b><small>${rs(p.price)}</small>${b}</div>`;
     }).join("") || '<p class="muted">Abhi koi product nahi.</p>';
+    fillThumbs();
   }
+
+  /* ---- Orders: thumbnails, card header, delete ---- */
+  const css = document.createElement("style");
+  css.textContent = ".th{width:48px;height:56px;border-radius:8px;overflow:hidden;background:#0e0c08;border:1px solid #33291a;flex:none}.th img{width:100%;height:100%;object-fit:cover;display:block}.ohead{display:flex;gap:12px;align-items:center;padding-bottom:10px;border-bottom:1px solid #33291a;margin-bottom:4px}.ohead .i{flex:1;min-width:0}.ohead b{display:block;font-size:14px}.ohead small,.row .i small{display:block;color:#a79b82;font-size:12px}.rt{text-align:right}.rt small{display:block;color:#a79b82;font-size:11px;margin-top:4px}#order-list .card h3{display:none}#order-list .card button[data-odel]{background:none;border:1px solid #5a2a28;color:#f09a96;border-radius:10px;padding:10px;font-weight:600;margin-top:4px;cursor:pointer}#order-list .card button[data-odel]:disabled{opacity:.5}";
+  document.head.appendChild(css);
+
+  const fmtD = d => { try { return new Date(d).toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" }); } catch { return ""; } };
+  const thumbBy = {};
+
+  async function loadThumbs() {
+    const db = window.maaziSupabase;
+    if (!db) return;
+    try {
+      const [it, vr] = await Promise.all([db.from("order_items").select("*"), db.from("product_variants").select("id,product_id")]);
+      if (it.error) return;
+      const v2p = {};
+      (vr.data || []).forEach(v => { v2p[v.id] = v.product_id; });
+      const P = typeof products !== "undefined" ? products : [];
+      (it.data || []).forEach(i => {
+        if (thumbBy[i.order_id]) return;
+        const pid = i.product_id || v2p[i.variant_id];
+        const p = P.find(x => String(x.id) === String(pid));
+        const img = p && Array.isArray(p.images) && p.images[0];
+        if (img) thumbBy[i.order_id] = img;
+      });
+    } catch (e) { console.warn(e); }
+  }
+
+  const thumbHTML = id => `<div class="th" data-oth="${esc(id)}">${thumbBy[id] ? `<img src="${esc(thumbBy[id])}" alt="" loading="lazy">` : ""}</div>`;
+
+  function fillThumbs() {
+    document.querySelectorAll("[data-oth]").forEach(el => {
+      const u = thumbBy[el.dataset.oth];
+      if (u && !el.firstChild) el.innerHTML = `<img src="${esc(u)}" alt="" loading="lazy">`;
+    });
+  }
+
+  function decorate() {
+    const O = typeof orders !== "undefined" ? orders : [];
+    document.querySelectorAll("#order-list article.card").forEach(card => {
+      if (card.dataset.dec) return;
+      const id = card.querySelector("[data-order-save]")?.dataset.orderSave;
+      if (!id) return;
+      card.dataset.dec = "1";
+      const o = O.find(x => String(x.id) === String(id));
+      const [t, c] = o ? lab(o) : ["", "warn"];
+      const head = document.createElement("div");
+      head.className = "ohead";
+      head.innerHTML = thumbHTML(id) + `<div class="i"><b>#${esc(o?.order_number || id)}</b><small>${esc(o?.customer_name || "")} · ${rs(o?.total)}</small></div><span class="bd b-${c}">${esc(t)}</span>`;
+      card.prepend(head);
+      const del = document.createElement("button");
+      del.type = "button";
+      del.dataset.odel = id;
+      del.textContent = "DELETE ORDER";
+      card.appendChild(del);
+    });
+    fillThumbs();
+  }
+  new MutationObserver(decorate).observe($("order-list"), { childList: true });
+
+  $("order-list").addEventListener("click", async e => {
+    const b = e.target.closest("[data-odel]");
+    if (!b) return;
+    if (!confirm("Is order ko hamesha ke liye delete karna hai? Ye wapas nahi ho sakta.")) return;
+    const db = window.maaziSupabase, id = b.dataset.odel, msg = $("message");
+    b.disabled = true;
+    try {
+      let r = await db.from("order_items").delete().eq("order_id", id);
+      if (r.error && !/does not exist|schema cache/i.test(r.error.message)) throw r.error;
+      r = await db.from("orders").delete().eq("id", id).select("id");
+      if (r.error) throw r.error;
+      if (!r.data || !r.data.length) throw new Error("Supabase ne delete allow nahi kiya (delete policy chahiye).");
+      msg.textContent = "Order deleted.";
+      $("refresh-btn").click();
+    } catch (err) {
+      msg.textContent = "Order delete error: " + (err.message || err);
+      b.disabled = false;
+    }
+  });
+  decorate();
 
   let timer;
   const later = () => { clearTimeout(timer); timer = setTimeout(build, 250); };
