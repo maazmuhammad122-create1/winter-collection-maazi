@@ -2,47 +2,135 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0b0a08">
 <title>Admin Panel | Winter Collection by Maazi</title>
-<link rel="stylesheet" href="style.css">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0a08;--card:#14110c;--card2:#1a160f;--line:#33291a;--gold:#d4af6a;--gold2:#b8893b;--ink:#f1e6cc;--mut:#a79b82;--gbg:linear-gradient(135deg,#e6c887,#b8893b);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;margin:0;font-family:Inter,"Segoe UI",Roboto,Arial,sans-serif}
+body{background:var(--bg);color:var(--ink);min-height:100vh}
+.hidden{display:none!important}
+h1,h2,h3,.serif{font-family:"Cormorant Garamond",Georgia,serif;font-weight:600}
+button{cursor:pointer;color:inherit;font-size:14px}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.logo{text-align:center;margin-bottom:26px}.logo b{display:block;font-family:"Cormorant Garamond",serif;font-size:40px;letter-spacing:.22em;color:var(--gold);font-weight:600;padding-left:.22em}.logo small{font-size:10px;letter-spacing:.3em;color:var(--gold2)}
+.app{display:grid;grid-template-columns:268px 1fr;min-height:100vh}
+nav{position:sticky;top:0;height:100vh;background:linear-gradient(180deg,#0d0b08,#080706 60%,#14100a);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:22px 14px;z-index:30}
+.nv{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;border-radius:10px;padding:13px 14px;margin-bottom:6px;text-align:left}
+.nv span{flex:1}.nv.on{background:var(--gbg);color:#15110a;font-weight:600}.nv:hover:not(.on){background:var(--card2)}
+.nv i{font-style:normal;background:var(--gold);color:#15110a;border-radius:11px;min-width:22px;height:22px;display:grid;place-items:center;font-size:12px;font-weight:600}.nv i:empty{display:none}
+.tag{margin-top:auto;text-align:center;font-family:"Cormorant Garamond",serif;font-style:italic;font-size:20px;color:var(--mut);padding:30px 8px;line-height:1.4}
+.nv.out{border-top:1px solid var(--line);border-radius:0;padding-top:18px}
+.mainc{min-width:0;background:radial-gradient(1200px 380px at 70% 0,#1d1810 0,transparent 70%)}
+.top{display:flex;gap:12px;align-items:center;padding:16px 22px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#0b0a08ee;z-index:20}
+.burger{display:none;width:42px;height:42px;border-radius:10px;background:var(--card);border:1px solid var(--gold);color:var(--gold);font-size:20px}
+.search{flex:1;max-width:520px;display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:0 14px;margin:0}
+.search input{background:none;border:0;color:var(--ink);padding:13px 0;width:100%;font-size:14px}.search input:focus{outline:0}
+.me{margin-left:auto;display:flex;align-items:center;gap:10px}.av{width:40px;height:40px;border-radius:50%;background:var(--gbg);color:#15110a;display:grid;place-items:center;font-family:"Cormorant Garamond",serif;font-weight:700;font-size:20px}.me small{display:block;color:var(--mut);font-size:12px}
+.pg{padding:22px;max-width:1200px}.pg h1{font-size:38px}.sub{color:var(--mut);margin:4px 0 20px}.muted{color:var(--mut);font-size:13px;line-height:1.5;margin:4px 0 12px}
+.view{display:none}.view.on{display:block}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
+.card,.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+.stat{display:flex;gap:14px;align-items:center;cursor:pointer;margin:0}.stat:hover{border-color:var(--gold)}
+.ico{width:52px;height:52px;border-radius:50%;background:#2a2113;color:var(--gold);display:grid;place-items:center;flex:none}.ico svg{width:24px;height:24px}
+.stat p{color:var(--mut);font-size:14px}.stat strong{display:block;font-size:30px;font-weight:500;margin:2px 0}.stat small{color:#5fc08a;font-size:13px}
+.two{display:grid;grid-template-columns:1.7fr 1fr;gap:16px}.sales{display:grid;grid-template-columns:1.8fr 1fr;gap:14px}
+.ct{display:flex;align-items:center;gap:10px;margin-bottom:14px;font-size:17px}.ct svg{color:var(--gold)}.ct a{margin-left:auto;color:var(--gold);font-size:13px;cursor:pointer;background:none;border:0}
+.mini{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px}.mini p{color:var(--mut);font-size:13px}.mini b{font-size:22px;font-weight:500}
+.row{display:flex;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line);cursor:pointer}.row:last-child{border:0}.row .i{flex:1;min-width:0}.row .i b{font-size:13px;display:block}.row .i small{color:var(--mut);font-size:12px}
+.bd{display:inline-block;border-radius:6px;padding:3px 11px;font-size:12px;font-weight:600;white-space:nowrap}.b-ok{background:#12301f;color:#6fd39b}.b-warn{background:#3a2c0e;color:#e5bb62}.b-proc{background:#1d3a74;color:#a9c4ff}.b-bad{background:#3d1a19;color:#f09a96}
+.pg5{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.pc{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:8px;cursor:pointer}.pc .im{aspect-ratio:1;border-radius:8px;overflow:hidden;background:#0e0c08;display:grid;place-items:center;color:var(--mut);font-size:12px}.pc img{width:100%;height:100%;object-fit:cover}.pc b{display:block;margin:8px 0 2px;font-size:14px}.pc small{display:block;color:var(--mut);margin-bottom:8px}
+.qa{display:grid;grid-template-columns:1fr 1fr;gap:10px}.qa button{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:14px}.qa button:hover{border-color:var(--gold)}
+.btn{display:inline-block;background:var(--gbg);color:#15110a;border:0;border-radius:10px;padding:11px 20px;font-weight:600;text-decoration:none}.btn:disabled{opacity:.5}
+.btn-secondary{background:none;color:var(--gold);border:1px solid var(--gold)}.btn-danger{background:none;color:#f09a96;border:1px solid #5a2a28}
+.btn-row,.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}.toolbar>*{flex:1;min-width:180px}
+.field{margin-bottom:12px}.field label,label{display:block;font-size:12px;color:var(--mut);margin:8px 0 5px}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+input,select,textarea{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px;width:100%;font-size:14px}input[type=file]{color:var(--mut)}
+.size-row{display:grid;grid-template-columns:1fr 110px auto;gap:8px;margin-bottom:8px}
+.photo-preview{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.photo-preview img{width:74px;height:90px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
+.notice{background:#2a2113;border:1px solid var(--gold2);color:var(--gold);border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:14px}
+#product-list,#order-list,#review-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
+#product-list .card,#order-list .card,#review-list .card{margin:0!important;display:flex;flex-direction:column;gap:6px;background:var(--card2)}
+#product-list .card h3,#order-list .card h3,#review-list .card h3{font-size:22px}
+#product-list .card p,#order-list .card p,#review-list .card p{font-size:14px;color:var(--mut);line-height:1.5}
+.price{color:var(--gold)!important;font-weight:600;font-size:17px!important}.sizes-line{color:var(--ink)!important;font-size:13px!important}
+.card button[data-edit],.card button[data-proof],.card button[data-review][data-approved=true]{background:none;border:1px solid var(--gold);color:var(--gold);border-radius:10px;padding:10px;font-weight:600}
+.card button[data-delete]{background:none;border:1px solid #5a2a28;color:#f09a96;border-radius:10px;padding:10px;font-weight:600}
+.card button[data-order-save],.card button[data-review][data-approved=false]{background:var(--gbg);border:0;color:#15110a;border-radius:10px;padding:11px;font-weight:600}
+.card button:disabled{opacity:.5}.empty{color:var(--mut);padding:24px;text-align:center;grid-column:1/-1}
+#message,#login-message,#payment-settings-message{color:var(--gold)}
+#message{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--card);border:1px solid var(--gold2);border-radius:22px;padding:10px 20px;z-index:99;max-width:90vw;font-size:14px}#message:empty{display:none}
+.login{max-width:400px;margin:12vh auto;padding:0 18px}.login .logo b{font-size:52px}.login .card{margin:0}
+#scrim{position:fixed;inset:0;background:#0008;z-index:25;display:none}#scrim.show{display:block}
+.foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:var(--mut);font-size:12px;border-top:1px solid var(--line);padding:16px 22px}
+@media(max-width:1000px){.stats{grid-template-columns:1fr 1fr}.two{grid-template-columns:1fr}}
+@media(max-width:800px){.app{grid-template-columns:1fr}nav{position:fixed;left:0;top:0;width:270px;transform:translateX(-100%);transition:transform .25s}nav.show{transform:none}.burger{display:block}.me div:last-child{display:none}.sales{grid-template-columns:1fr}.pg{padding:16px}.pg h1{font-size:32px}.form-grid{grid-template-columns:1fr}}
+@media(max-width:480px){.stats{grid-template-columns:1fr}.qa{grid-template-columns:1fr}.size-row{grid-template-columns:1fr 90px auto}}
+</style>
 </head>
-<body class="admin">
-<div id="snow" aria-hidden="true"></div>
-<div class="announcement">Maazi admin · Winter 2026</div>
-<header><h1>Winter Collection</h1><p>by Maazi</p></header>
-<main class="container">
-<section class="hero"><small>Private management area</small><h2>Manage your collection</h2><p>Products, stock, orders and reviews</p></section>
+<body>
 
-<section class="panel" id="login-panel">
-<h2>Admin login</h2>
-<p class="muted">Sign in with your authorised Supabase account.</p>
+<section class="login" id="login-panel">
+<div class="logo"><b>MAAZI</b><small>WINTER COLLECTION</small></div>
+<div class="card">
 <form id="login-form">
 <div class="field"><label for="email">Admin email</label><input id="email" type="email" autocomplete="username" placeholder="Enter admin email" required></div>
 <div class="field"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" placeholder="Enter password" required></div>
-<button class="btn" type="submit">Log in</button>
+<button class="btn" type="submit" style="width:100%">Log in</button>
 <p id="login-message" class="muted" aria-live="polite"></p>
 </form>
+</div>
 </section>
 
-<section id="dashboard" class="hidden">
-<div class="btn-row" style="margin-bottom:18px">
-<button class="btn btn-secondary" id="refresh-btn" type="button">Refresh data</button>
-<button class="btn btn-danger" id="logout-btn" type="button">Log out</button>
-</div>
-<div class="stats">
-<div class="stat"><strong id="stat-products">—</strong><span>Products</span></div>
-<div class="stat"><strong id="stat-orders">—</strong><span>Orders</span></div>
-<div class="stat"><strong id="stat-reviews">—</strong><span>Reviews</span></div>
-<div class="stat"><strong id="stat-stock">—</strong><span>Total stock</span></div>
-</div>
-<nav class="tabs" aria-label="Admin sections">
-<a class="btn" href="#products">Products</a><a class="btn btn-secondary" href="#orders">Orders</a><a class="btn btn-secondary" href="#reviews">Reviews</a>
+<div class="app hidden" id="dashboard">
+<nav id="side">
+<div class="logo"><b>MAAZI</b><small>WINTER COLLECTION</small></div>
+<button class="nv on" data-view="dash"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z"/></svg><span>Dashboard</span></button>
+<button class="nv" data-view="products"><svg viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5v8l9 5 9-5zM3 8l9 5 9-5M12 13v8"/></svg><span>Products</span></button>
+<button class="nv" data-view="orders"><svg viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h3l2.6 12h11l2-8H6"/></svg><span>Orders</span><i id="nb-orders"></i></button>
+<button class="nv" data-view="reviews"><svg viewBox="0 0 24 24"><path d="M12 3l2.8 5.8 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.3l1-6.2L3 9.7l6.2-.9z"/></svg><span>Reviews</span><i id="nb-reviews"></i></button>
+<button class="nv" data-view="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg><span>Settings</span></button>
+<div class="tag">Premium Clothing<br>for a Colder World</div>
+<button class="nv out" id="logout-btn" type="button"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg><span>Logout</span></button>
 </nav>
 
-<section class="panel tab-section" id="products">
-<h2>Product management</h2>
-<p class="muted">Add products, upload several photos from your phone gallery, and manage category, sizes, prices and stock.</p>
+<div class="mainc">
+<div class="top">
+<button class="burger" id="burger" type="button" aria-label="Open menu">☰</button>
+<label class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input id="gsearch" type="search" placeholder="Search products, orders, or customers..."></label>
+<button class="btn btn-secondary" id="refresh-btn" type="button">Refresh data</button>
+<div class="me"><div class="av">M</div><div>Maazi Admin<small>Administrator</small></div></div>
+</div>
+
+<div class="pg">
+
+<section class="view on" data-view="dash">
+<h1>Welcome Back, Maazi</h1><p class="sub">Here's what's happening with your store today. <span id="today"></span></p>
+<div class="stats">
+<div class="card stat" data-view="products"><div class="ico"><svg viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5v8l9 5 9-5zM3 8l9 5 9-5M12 13v8"/></svg></div><div><p>Total Products</p><strong id="stat-products">—</strong></div></div>
+<div class="card stat" data-view="orders"><div class="ico"><svg viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h3l2.6 12h11l2-8H6"/></svg></div><div><p>Total Orders</p><strong id="stat-orders">—</strong><small id="sub-orders"></small></div></div>
+<div class="card stat" data-view="reviews"><div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3l2.8 5.8 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.3l1-6.2L3 9.7l6.2-.9z"/></svg></div><div><p>Total Reviews</p><strong id="stat-reviews">—</strong><small id="sub-reviews"></small></div></div>
+<div class="card stat" data-view="products"><div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3l4 2.3v4.6L12 12.2 8 9.9V5.3zM6 12.5l4 2.3v4.6L6 21.7l-4-2.3v-4.6zM18 12.5l4 2.3v4.6l-4 2.3-4-2.3v-4.6z"/></svg></div><div><p>Total Stock</p><strong id="stat-stock">—</strong></div></div>
+</div>
+<div class="two">
+<div class="card"><div class="ct"><svg viewBox="0 0 24 24"><path d="M3 3v18h18M7 15l4-4 3 3 5-6"/></svg>Sales Overview (last 7 days)</div>
+<div class="sales"><div id="dash-chart"></div><div>
+<div class="mini"><p>Total Revenue</p><b id="d-rev">PKR 0</b></div>
+<div class="mini"><p>Pending Orders</p><b id="d-pend">0</b></div>
+<div class="mini"><p>Low Stock Items</p><b id="d-low">0</b></div></div></div></div>
+<div class="card"><div class="ct">Recent Orders<a data-view="orders">View All</a></div><div id="dash-orders"></div></div>
+</div>
+<div class="two">
+<div class="card"><div class="ct">Manage Products<a data-view="products">View All</a></div><div class="pg5" id="dash-products"></div></div>
+<div class="card"><div class="ct">Quick Actions</div><div class="qa"><button type="button" id="qa-add">+ Add New Product</button><button type="button" data-view="orders">Manage Orders</button><button type="button" data-view="reviews">View Reviews</button><button type="button" data-view="settings">Store Settings</button></div></div>
+</div>
+</section>
+
+<section class="view" data-view="products">
+<h1>Products</h1><p class="sub">Add, edit, delete products, photos and size-wise stock.</p>
+<div class="panel" id="products">
 <p id="edit-banner" class="notice hidden"></p>
 <form id="product-form">
 <input id="product-id" type="hidden">
@@ -54,7 +142,7 @@
 <div class="field"><label for="product-category">Category</label><input id="product-category" list="category-list" maxlength="60" placeholder="e.g. Shirts, Trousers, Winter Wear" autocomplete="off"><datalist id="category-list"><option value="Shirts"><option value="Trousers"><option value="Winter Wear"></datalist></div>
 <div class="field"><label for="product-old-price">Old price (PKR), optional</label><input id="product-old-price" type="number" min="0" step="1" placeholder="Fill only for a sale"></div>
 </div>
-<p class="muted">Category shop ke sidebar mein dikhti hai. Old price bharne par product "Sale" mein aur kati hui price ke saath dikhta hai.</p>
+<p class="muted">Category shop ke sidebar mein dikhti hai. Old price bharne par product "Sale" mein dikhta hai.</p>
 <input id="product-sizes" type="hidden"><input id="product-stock" type="hidden" value="0">
 <div class="field"><label>Sizes and stock *</label>
 <div id="size-rows"></div>
@@ -63,61 +151,54 @@
 <div class="field"><label for="product-description">Product description</label><textarea id="product-description" rows="3" placeholder="Product details..."></textarea></div>
 <div class="field"><label for="product-photos">Product photos from phone gallery</label>
 <input id="product-photos" type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple>
-<p class="muted">Select several images together. Upload capacity depends on your Supabase storage plan.</p>
 <div id="photo-preview" class="photo-preview"></div></div>
 <div class="btn-row">
 <button class="btn" id="save-product-btn" type="submit">Save product</button>
 <button class="btn btn-secondary" id="reset-product-btn" type="button">Clear form</button>
 </div>
 </form>
-</section>
-
-<section class="panel">
-<h3>All products</h3>
+</div>
 <div class="toolbar"><input id="product-search" type="search" placeholder="Search products..."></div>
-<div id="product-list" class="empty">Products will appear here once the admin script connects to Supabase.</div>
+<div id="product-list" class="empty">Products will appear here.</div>
 </section>
 
-<section class="panel tab-section" id="orders">
-<h2>Customer orders</h2>
-<p class="muted">Review orders, check the payment screenshot and update the delivery status.</p>
+<section class="view" data-view="orders">
+<h1>Orders</h1><p class="sub">Customer details, payment status and order management.</p>
 <div class="toolbar">
 <input id="order-search" type="search" placeholder="Search order, customer or phone...">
 <select id="order-status-filter" aria-label="Filter orders">
 <option value="">All statuses</option><option value="payment_submitted">Payment submitted</option><option value="pending_payment">Pending payment</option><option value="pending">Pending</option><option value="confirmed">Confirmed</option><option value="processing">Processing</option><option value="shipped">Shipped</option><option value="delivered">Delivered</option><option value="cancelled">Cancelled</option>
 </select>
 </div>
-<div id="order-list" class="empty">Orders will appear here once connected to your database.</div>
+<div id="order-list" class="empty">Orders will appear here.</div>
 </section>
 
-<section class="panel tab-section" id="reviews">
-<h2>Customer reviews</h2>
-<p class="muted">See customer feedback and ratings.</p>
-<div id="review-list" class="empty">Reviews will appear here once connected to your database.</div>
+<section class="view" data-view="reviews">
+<h1>Reviews</h1><p class="sub">Customer reviews approve ya hide karein.</p>
+<div id="review-list" class="empty">Reviews will appear here.</div>
 </section>
 
-<section class="panel" id="payment-settings">
-<h2>Easypaisa payment settings</h2>
+<section class="view" data-view="settings">
+<h1>Settings</h1><p class="sub">Easypaisa details aur advance payment instructions.</p>
+<div class="panel" id="payment-settings" style="max-width:640px">
 <div class="field"><label for="easypaisa-title">Account title</label><input id="easypaisa-title" type="text" placeholder="Registered account name"></div>
 <div class="field"><label for="easypaisa-number">Easypaisa number</label><input id="easypaisa-number" type="tel" placeholder="03XXXXXXXXX"></div>
-<div class="field"><label for="advance-instructions">Payment instructions</label><textarea id="advance-instructions" placeholder="Payment instructions"></textarea></div>
+<div class="field"><label for="advance-instructions">Payment instructions</label><textarea id="advance-instructions" rows="4" placeholder="Payment instructions"></textarea></div>
 <button class="btn" id="save-payment-settings" type="button">Save payment settings</button>
 <p id="payment-settings-message" role="status"></p>
+</div>
 </section>
+
+</div>
+<div class="foot"><span>Maazi Admin Panel v1.0.0</span><span>Winter Collection by Maazi</span></div>
+</div>
+</div>
+<div id="scrim"></div>
 <p id="message" role="status" aria-live="polite"></p>
-</section>
-</main>
-<footer><strong>Winter Collection by Maazi</strong><br>Keep your login details private.</footer>
-<script>
-(()=>{
-const snow=document.getElementById("snow");
-for(let i=0;i<30;i++){const f=document.createElement("span");f.className="flake";f.textContent="❄";f.style.left=Math.random()*100+"%";f.style.animationDuration=(6+Math.random()*8)+"s";f.style.animationDelay=(-Math.random()*12)+"s";f.style.fontSize=(8+Math.random()*12)+"px";snow.appendChild(f)}
-const fi=document.getElementById("product-photos"),pv=document.getElementById("photo-preview");
-fi.addEventListener("change",()=>{pv.replaceChildren();Array.from(fi.files||[]).forEach(file=>{if(!file.type.startsWith("image/"))return;const img=document.createElement("img");img.alt=file.name;const u=URL.createObjectURL(file);img.src=u;img.onload=()=>URL.revokeObjectURL(u);pv.appendChild(img)})});
-})();
-</script>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase.js"></script>
 <script src="admin.js"></script>
+<script src="admin-ui.js"></script>
 </body>
 </html>
