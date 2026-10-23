@@ -128,7 +128,8 @@ input[type=file]{padding:8px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase.js"></script>
 <script>
-const DB=window.maaziSupabase,FN="https://extbxdbzyfpbnpnhswsu.supabase.co/functions/v1/upload-payment-proof",KEY="sb_publishable_imfAmf4GjqdTgzimy7T_iw_xSZLRCX2",ADV=300,DEL=250,WA="923189250877";
+const DB=window.maaziSupabase,FN="https://extbxdbzyfpbnpnhswsu.supabase.co/functions/v1/upload-payment-proof",KEY="sb_publishable_imfAmf4GjqdTgzimy7T_iw_xSZLRCX2",ADV_PCT=0.5,DEL=250,WA="923189250877";
+const adv=T=>Math.ceil(T*ADV_PCT);
 const $=id=>document.getElementById(id),rs=n=>"PKR "+Number(n||0).toLocaleString("en-US");
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]);
 const ORD=["XS","S","M","L","XL","XXL"],wa=m=>"https://wa.me/"+WA+"?text="+encodeURIComponent(m);
@@ -194,36 +195,34 @@ function open(id){const p=P.find(x=>String(x.id)==String(id));if(!p)return;let s
  draw();$("pov").classList.add("show")}
 function addCart(v){const l=st.cart.find(x=>String(x.vid)==String(v.id)),q=(l?l.q:0)+1;if(q>v.stock)return toast("Only "+v.stock+" available");l?l.q=q:st.cart.push({vid:v.id,q:1});saveCart();toast("Added to cart");drawCart();showCart(true)}
 function drawCart(){$("cc").textContent=st.cart.reduce((t,l)=>t+l.q,0);
- $("cart").innerHTML=`<button class="x" id="cx" aria-label="Close cart">×</button><h2 style="margin-bottom:8px">Your cart</h2>`+(st.cart.length?st.cart.map((l,k)=>{const f=findV(l.vid);return `<div class="line"><div class="th">${art(f.p,0)}</div><div style="flex:1"><div>${esc(f.p.name)}</div><small style="color:var(--mut)">${esc(vlabel(f.v))} · ${rs(f.p.price)}</small></div><div class="q"><button data-q="${k}:-1" aria-label="Less">−</button> ${l.q} <button data-q="${k}:1" aria-label="More">+</button></div></div>`}).join("")+`<p style="margin-top:16px;display:flex;justify-content:space-between"><span>Items total</span><b>${rs(total())}</b></p><p class="note">Advance ${rs(ADV)} now (Easypaisa). Delivery charges ${rs(DEL)} are paid on delivery.</p><button class="primary" id="co">Checkout</button>`:`<p style="color:var(--mut)">Your cart is empty. Pick a product and size to start.</p>`);
+ $("cart").innerHTML=`<button class="x" id="cx" aria-label="Close cart">×</button><h2 style="margin-bottom:8px">Your cart</h2>`+(st.cart.length?st.cart.map((l,k)=>{const f=findV(l.vid);return `<div class="line"><div class="th">${art(f.p,0)}</div><div style="flex:1"><div>${esc(f.p.name)}</div><small style="color:var(--mut)">${esc(vlabel(f.v))} · ${rs(f.p.price)}</small></div><div class="q"><button data-q="${k}:-1" aria-label="Less">−</button> ${l.q} <button data-q="${k}:1" aria-label="More">+</button></div></div>`}).join("")+`<p style="margin-top:16px;display:flex;justify-content:space-between"><span>Items total</span><b>${rs(total())}</b></p><p class="note">Advance ${rs(adv(total()))} (50%) now (Easypaisa). Delivery charges ${rs(DEL)} are paid on delivery.</p><button class="primary" id="co">Checkout</button>`:`<p style="color:var(--mut)">Your cart is empty. Pick a product and size to start.</p>`);
  $("cx").onclick=()=>showCart(false);if($("co"))$("co").onclick=()=>{showCart(false);checkout()}}
 const showCart=v=>$("cart").classList.toggle("show",v);
-function checkout(){const T=total(),bal=Math.max(0,T-Math.min(ADV,T))+DEL;
+function checkout(){const T=total(),A=adv(T),bal=T-A+DEL;
  $("cp").innerHTML=`<button class="x" aria-label="Close">×</button><h2 style="margin-bottom:12px">Checkout</h2>
  <div class="f"><label>Full name</label><input type="text" id="nm" maxlength="100"></div><div class="f"><label>Phone / WhatsApp</label><input type="tel" id="ph" maxlength="25" placeholder="03XX XXXXXXX"></div>
  <div class="f"><label>City</label><input type="text" id="ct" maxlength="100"></div><div class="f"><label>Delivery address</label><textarea id="ad" rows="2" maxlength="1000"></textarea></div>
- <div class="pay"><b>Easypaisa advance payment</b><p>Account title: <b>${esc(SET.easypaisa_title||"Will be updated soon")}</b></p><p>Account number: <b id="epn">${esc(SET.easypaisa_number||"Not available yet")}</b> ${SET.easypaisa_number?`<button class="chip" id="cpy" type="button">Copy</button>`:""}</p><p style="color:var(--mut)">${esc(SET.advance_instructions||"Send the advance, then enter the Transaction ID and upload the screenshot.")}</p></div>
- <div class="f"><label>Transaction ID</label><input type="text" id="tid" maxlength="150"></div><div class="f"><label>Payment screenshot (JPG, PNG or WebP, under 5 MB)</label><input type="file" id="pf" accept="image/jpeg,image/png,image/webp"></div>
- <p class="sum"><span>Items total</span><b>${rs(T)}</b></p><p class="sum"><span>Advance (pay now)</span><b>${rs(Math.min(ADV,T))}</b></p><p class="sum"><span>Pay on delivery (balance + ${rs(DEL)} delivery)</span><b>${rs(bal)}</b></p>
+ <div class="pay"><b>Easypaisa advance payment</b><p>Account title: <b>${esc(SET.easypaisa_title||"Will be updated soon")}</b></p><p>Account number: <b id="epn">${esc(SET.easypaisa_number||"Not available yet")}</b> ${SET.easypaisa_number?`<button class="chip" id="cpy" type="button">Copy</button>`:""}</p><p style="color:var(--mut)">${esc(SET.advance_instructions||"Send the advance, then place your order and send the screenshot on WhatsApp.")}</p></div>
+ <p class="note">Advance Easypaisa par bhejne ke baad, order place karein. Phir WhatsApp khulega, wahan <b>payment ka screenshot aur Transaction ID</b> bhejein. Screenshot milne par hi order confirm hoga.</p>
+ <p class="sum"><span>Items total</span><b>${rs(T)}</b></p><p class="sum"><span>Advance 50% (pay now)</span><b>${rs(A)}</b></p><p class="sum"><span>Delivery charges (pay on delivery)</span><b>${rs(DEL)}</b></p><p class="sum"><span>Pay on delivery (balance ${rs(T-A)} + ${rs(DEL)} delivery)</span><b>${rs(bal)}</b></p>
  <button class="primary" id="place">Place order</button>`;
  $("cp").querySelector(".x").onclick=()=>$("cov").classList.remove("show");$("place").onclick=place;
  if($("cpy"))$("cpy").onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(SET.easypaisa_number).then(()=>toast("Number copied"),()=>toast("Copy nahi hua"))};
  $("cov").classList.add("show")}
-async function place(){const v=id=>$(id).value.trim(),nm=v("nm"),ph=v("ph"),ct=v("ct"),ad=v("ad"),tx=v("tid"),f=$("pf").files[0];
+async function place(){const v=id=>$(id).value.trim(),nm=v("nm"),ph=v("ph"),ct=v("ct"),ad=v("ad");
  if(!st.cart.length)return toast("Your cart is empty");
  if(!nm||!ph||!ct||!ad)return toast("Fill in all delivery details");
- if(!tx)return toast("Enter the Transaction ID");if(!f)return toast("Select your payment screenshot");
- if(!["image/jpeg","image/png","image/webp"].includes(f.type))return toast("Screenshot must be JPG, PNG or WebP");
- if(f.size>5*1024*1024)return toast("Screenshot must be under 5 MB");
  const b=$("place");b.disabled=true;b.textContent="Please wait...";
- try{const fd=new FormData();
-  fd.append("customer_name",nm);fd.append("phone",ph);fd.append("city",ct);fd.append("address",ad);fd.append("payment_method","ADVANCE");fd.append("advance_amount",String(ADV));fd.append("transaction_id",tx);
-  fd.append("items",JSON.stringify(st.cart.map(l=>({variant_id:String(l.vid),qty:l.q}))));fd.append("payment_proof",f,f.name);
+ try{const T=total(),A=adv(T),lines=st.cart.map(l=>{const f=findV(l.vid);return f?f.p.name+" ("+vlabel(f.v)+") x "+l.q:""}).filter(Boolean),fd=new FormData();
+  fd.append("customer_name",nm);fd.append("phone",ph);fd.append("city",ct);fd.append("address",ad);fd.append("payment_method","ADVANCE");fd.append("advance_amount",String(A));
+  fd.append("items",JSON.stringify(st.cart.map(l=>({variant_id:String(l.vid),qty:l.q}))));
   const r=await fetch(FN,{method:"POST",headers:{apikey:KEY},body:fd});let j;
   try{j=await r.json()}catch{throw new Error("Server ka response samajh nahi aaya.")}
   if(!r.ok||!j.success)throw new Error(j.error||"Order submit nahi hua.");
-  st.cart=[];saveCart();drawCart();done(j.order_number);load()
+  st.cart=[];saveCart();drawCart();done(j.order_number,{nm,ph,ct,ad,lines,T,A});load()
  }catch(e){toast(e.message||"Order submit nahi hua.");b.disabled=false;b.textContent="Place order"}}
-function done(no){$("cp").innerHTML=`<button class="x" aria-label="Close">×</button><h2>Order placed</h2><p style="margin:10px 0">Your order number is <b>${esc(no)}</b>. Keep it to track your delivery.</p><p style="margin:10px 0;color:var(--mut)">Your payment will be verified by the store. For any problem, message us on WhatsApp.</p><a class="primary" target="_blank" rel="noopener noreferrer" href="${wa("Hello Maazi, my order number is "+no+". I have sent the PKR 300 advance.")}">Message us on WhatsApp</a><button class="primary ghost" id="tr">Track this order</button>`;
+function done(no,i){const msg="Hello Maazi, I placed order "+no+".\nName: "+i.nm+"\nPhone: "+i.ph+"\nCity: "+i.ct+"\nAddress: "+i.ad+"\nItems: "+i.lines.join(", ")+"\nItems total: "+rs(i.T)+"\nAdvance 50%: "+rs(i.A)+"\nDelivery charges (pay on delivery): "+rs(DEL)+"\nI am sending the payment screenshot and Transaction ID now.";
+ $("cp").innerHTML=`<button class="x" aria-label="Close">×</button><h2>Order placed</h2><p style="margin:10px 0">Your order number is <b>${esc(no)}</b>. Keep it to track your delivery.</p><p style="margin:10px 0">Ab <b>${rs(i.A)}</b> advance Easypaisa par bhej kar, payment ka <b>screenshot aur Transaction ID WhatsApp par bhejein</b>. Screenshot milne par order confirm hoga.</p><a class="primary" target="_blank" rel="noopener noreferrer" href="${wa(msg)}">Send payment screenshot on WhatsApp</a><button class="primary ghost" id="tr">Track this order</button>`;
  $("cp").querySelector(".x").onclick=()=>$("cov").classList.remove("show");$("tr").onclick=()=>{$("cov").classList.remove("show");track(no)}}
 const stepOf=s=>({payment_submitted:0,pending_payment:0,pending:0,confirmed:1,processing:1,shipped:2,delivered:3})[String(s||"").toLowerCase()];
 function track(pre){const L=["Placed","Confirmed","Shipped","Delivered"];
