@@ -1,12 +1,18 @@
-
 /* Maazi redesign layer: index.html ke baad load hota hai, purana code nahi chhedta */
-/* hero photo banner */
-.hero{display:block;padding:0;border:0;background:none;overflow:hidden;cursor:pointer;width:calc(100% - 36px);max-width:560px;margin:16px auto 0;border-radius:16px}
-.hero img{display:block;width:100%;height:auto;border-radius:16px}
+/* hero */
+.hero{display:flex;align-items:flex-end;justify-content:space-between;position:relative;min-height:280px;padding:20px 18px;overflow:hidden;cursor:pointer;width:calc(100% - 36px);max-width:560px;margin:16px auto 0;border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,rgba(11,10,8,.05),rgba(11,10,8,.88)),url(assets/hero-bg.jpg) center/cover,linear-gradient(120deg,#3a3a3c,#16191d 55%,#4a4034)}
+.hx{position:relative;z-index:2;max-width:52%}
+.hx small{display:block;letter-spacing:.3em;font-size:11px;margin-bottom:6px}
+.hx h1{font-size:44px;font-style:normal;line-height:1.05}
+.hx p{color:var(--ink);font:500 19px/1.2 "Cormorant Garamond",Georgia,serif;margin:4px 0 16px}
+.hbtn{display:inline-block;background:var(--gold);color:#1a1409;font-weight:600;border-radius:8px;padding:10px 16px;font-size:14px}
+.hph{position:absolute;right:12px;top:12px;bottom:12px;width:44%}
+.hph img{position:absolute;width:60%;height:68%;object-fit:cover;border-radius:12px;border:1px solid var(--line);box-shadow:0 8px 24px rgba(0,0,0,.55)}
+.hp0{left:0;top:0}.hp1{right:0;bottom:0}
 /* quick category tiles */
 .qt{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:16px auto 0;width:calc(100% - 36px);max-width:1100px}
 .qt button{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 4px;font-size:11px;color:var(--mut);line-height:1.3}
-.qt span{display:block;font-size:22px;margin-bottom:4px}
+.qt svg{width:26px;height:26px;fill:none;stroke:var(--gold);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 6px}
 /* product cards */
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;padding-bottom:12px}
 .card .slider{border-radius:0}
@@ -58,3 +64,11 @@ body{padding-bottom:78px}
 .line{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:10px}
 .line .th{width:64px;height:72px}.line .th img{width:100%;height:100%;object-fit:cover}
 .q button{color:var(--ink)}
+
+/* design polish */
+#title{font-family:Inter,sans-serif;font-size:20px;font-weight:600}
+.card{cursor:pointer}
+.sz3{display:flex;gap:6px;flex-wrap:wrap}
+.sz3 i{font-style:normal;border:1px solid var(--mut);border-radius:5px;font-size:10px;padding:3px 8px;color:var(--ink)}
+.sz3 i.off{opacity:.35;text-decoration:line-through}
+@media(max-width:800px){.card .order{display:none}.menu{display:none}}
