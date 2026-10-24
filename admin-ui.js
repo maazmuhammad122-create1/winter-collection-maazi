@@ -19,7 +19,7 @@
   }
 
   document.addEventListener("click", e => {
-    const t = e.target.closest("[data-view]");
+    const t = e.target.closest("[data-view]:not(section)");
     if (t) return show(t.dataset.view);
     const p = e.target.closest("[data-pedit]");
     if (p) {
