@@ -1,4 +1,3 @@
-/* Category Pictures tab for admin.html (admin.js / admin-ui.js ko nahi chhedta) */
 (() => {
   const D = window.maaziSupabase, g = id => document.getElementById(id);
   if (!D || !g("cp-list")) return;
