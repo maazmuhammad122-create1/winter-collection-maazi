@@ -1,1 +1,60 @@
 
+/* Maazi redesign layer: index.html ke baad load hota hai, purana code nahi chhedta */
+/* hero photo banner */
+.hero{display:block;padding:0;border:0;background:none;overflow:hidden;cursor:pointer;width:calc(100% - 36px);max-width:560px;margin:16px auto 0;border-radius:16px}
+.hero img{display:block;width:100%;height:auto;border-radius:16px}
+/* quick category tiles */
+.qt{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:16px auto 0;width:calc(100% - 36px);max-width:1100px}
+.qt button{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 4px;font-size:11px;color:var(--mut);line-height:1.3}
+.qt span{display:block;font-size:22px;margin-bottom:4px}
+/* product cards */
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;padding-bottom:12px}
+.card .slider{border-radius:0}
+.card .pn,.card .price,.card .sizes{padding:0 12px}
+.card .pn{font-size:16px;font-weight:500;font-family:Inter,sans-serif}
+.card .order{width:calc(100% - 24px);margin:0 12px;background:var(--gold);color:#1a1409;border:0;border-radius:8px}
+.dots i.on{background:var(--gold)}
+/* heart (wishlist) */
+.wh{position:absolute;top:8px;right:8px;z-index:3;width:34px;height:34px;border-radius:50%;border:0;background:rgba(11,10,8,.55);color:var(--ink);font-size:19px;line-height:1;padding:0;display:grid;place-items:center}
+.wh.on{color:var(--gold)}
+/* wishlist page */
+.wr{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:10px;cursor:pointer}
+.wr .th{width:60px;height:72px;border-radius:8px;overflow:hidden;flex:none}.wr .th img{width:100%;height:100%;object-fit:cover}
+.wr small{color:var(--mut)}
+.wr .wh{position:static;background:none;font-size:22px}
+.wbn{display:block;width:100%;border-radius:14px;margin-top:18px}
+/* bottom nav (sirf mobile) */
+#bnav{display:none}
+@media(max-width:800px){
+#bnav{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:22;background:#0c0b0a;border-top:1px solid var(--line);padding:8px 0 calc(8px + env(safe-area-inset-bottom,0px))}
+#bnav button{flex:1;background:none;border:0;color:var(--mut);font-size:10px;position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:0}
+#bnav button.on{color:var(--gold)}
+#bnav svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#bnav em{position:absolute;top:-4px;left:calc(50% + 6px);background:var(--gold);color:#15110a;font-style:normal;font-size:10px;font-weight:700;min-width:16px;height:16px;border-radius:8px;display:grid;place-items:center}
+body{padding-bottom:78px}
+#cartBtn{display:none}
+#toast{bottom:92px}
+}
+
+/* categories page */
+.cb{border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:14px;background:linear-gradient(110deg,#1d1914,#0c0b0a)}
+.cb h3{font:500 26px/1.15 "Cormorant Garamond",Georgia,serif}
+.cg{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.cc{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;cursor:pointer}
+.cc .im{height:120px;background:#1c1916}.cc .im img{width:100%;height:100%;object-fit:cover}
+.cc .in{padding:10px;font-size:12px}.cc b{display:block;font-size:14px}.cc small{color:var(--mut)}
+.ex{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;cursor:pointer;letter-spacing:0}
+/* product page */
+.pdh{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.x2{background:none;border:0;color:var(--ink);font-size:22px;padding:6px 10px;letter-spacing:0}
+.pdh .wh{position:static;background:none;font-size:24px;color:var(--gold);width:auto;height:auto}
+.pbig{aspect-ratio:1/1.02;border-radius:14px}
+.pth{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:10px 0 14px}
+.pth button{aspect-ratio:1;border:1px solid var(--line);border-radius:8px;padding:0;overflow:hidden;background:#1c1916}.pth button.on{border-color:var(--gold)}.pth img{width:100%;height:100%;object-fit:cover}
+.spec2{display:grid;grid-template-columns:auto 1fr;gap:6px 24px;font-size:13px;margin:10px 0 14px}.spec2 span{color:var(--mut)}
+.sz2{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0}.sz2 .chip{min-width:54px;min-height:42px;font-size:14px;border-radius:8px}
+#sq{flex:1;min-width:0;height:46px;border-radius:12px}
+/* cart drawer */
+.line{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:10px}
+.line .th{width:64px;height:72px}.line .th img{width:100%;height:100%;object-fit:cover}
+.q button{color:var(--ink)}
