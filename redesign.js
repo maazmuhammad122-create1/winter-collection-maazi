@@ -2,15 +2,17 @@
 (()=>{
 const $=id=>document.getElementById(id);
 const E=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]);
-/* hero photo (poora banner clickable) */
+/* hero (text code mein, photos aapke live products se) */
 const hero=document.querySelector(".hero");
-hero.innerHTML='<img src="assets/hero-photo.jpg" alt="Winter Collection: Premium Sweatshirts and Shirts">';
+hero.innerHTML='<div class="hx"><small>WINTER COLLECTION</small><h1>Premium</h1><p>Sweatshirts &amp; Shirts</p><span class="hbtn">Shop Now →</span></div><div class="hph" id="hph"></div>';
 hero.onclick=()=>$("shopTop").scrollIntoView({behavior:"smooth"});
+let hdone=false;
+function heroPics(){if(hdone||typeof P=="undefined"||!P.length)return;const a=P.filter(p=>p.imgs.length).slice(0,2);if(!a.length)return;hdone=true;$("hph").innerHTML=a.map((p,i)=>`<img class="hp${i}" src="${E(p.imgs[0])}" alt="${E(p.name)}">`).join("")}
 /* wishlist storage */
 let W=new Set();try{W=new Set(JSON.parse(localStorage.getItem("maazi_wish")||"[]").map(String))}catch{}
 const saveW=()=>{try{localStorage.setItem("maazi_wish",JSON.stringify([...W]))}catch{}};
 const heart=id=>W.has(String(id))?"♥":"♡";
-function hearts(){document.querySelectorAll("#grid .slider[data-sl]").forEach(s=>{if(s.querySelector(".wh"))return;const id=s.dataset.sl,b=document.createElement("button");b.type="button";b.className="wh"+(W.has(id)?" on":"");b.dataset.w=id;b.setAttribute("aria-label","Add to wishlist");b.textContent=heart(id);s.appendChild(b)})}
+function hearts(){heroPics();document.querySelectorAll("#grid .card").forEach(c=>{const s=c.querySelector("[data-sl]");if(!s||c.querySelector(".sz3"))return;const p=P.find(x=>String(x.id)==s.dataset.sl);const d=c.querySelector(".sizes");if(!p||!d)return;const z=[...new Set(p.v.map(v=>v.size).filter(Boolean))];d.className="sizes sz3";d.innerHTML=z.map(k=>`<i class="${p.v.some(v=>v.size==k&&v.stock>0)?"":"off"}">${E(k)}</i>`).join("")});document.querySelectorAll("#grid .slider[data-sl]").forEach(s=>{if(s.querySelector(".wh"))return;const id=s.dataset.sl,b=document.createElement("button");b.type="button";b.className="wh"+(W.has(id)?" on":"");b.dataset.w=id;b.setAttribute("aria-label","Add to wishlist");b.textContent=heart(id);s.appendChild(b)})}
 new MutationObserver(hearts).observe($("grid"),{childList:true});hearts();
 /* wishlist overlay */
 const ov=document.createElement("div");ov.className="ov";ov.id="wov";ov.innerHTML='<div class="panel" id="wp"></div>';document.body.appendChild(ov);
@@ -22,6 +24,7 @@ document.addEventListener("click",e=>{
  const h=e.target.closest("[data-w]");
  if(h){const id=h.dataset.w;W.has(id)?W.delete(id):W.add(id);saveW();document.querySelectorAll('.wh[data-w="'+id+'"]').forEach(b=>{b.classList.toggle("on",W.has(id));b.textContent=heart(id)});if(ov.classList.contains("show"))drawW();return}
  if(e.target==ov||e.target.closest("#wp .x")){closeW();return}
+ const cn=e.target.closest(".card .pn,.card .price,.card .sizes");if(cn){const s=cn.closest(".card").querySelector("[data-sl]");if(s)open(s.dataset.sl);return}
  const r=e.target.closest("[data-wo]");if(r){const id=r.dataset.wo;closeW();open(id)}});
 document.addEventListener("keydown",e=>{if(e.key=="Escape"&&ov.classList.contains("show"))closeW()});
 /* bottom nav */
@@ -37,18 +40,24 @@ nav.onclick=e=>{const b=e.target.closest("[data-n]");if(!b)return;const k=b.data
  if(k=="wish")openW()};
 const sync=()=>{const n=$("cc").textContent,e=$("bcc");e.textContent=n;e.style.display=n=="0"?"none":"grid"};
 new MutationObserver(sync).observe($("cc"),{childList:true,characterData:true,subtree:true});sync();
-/* category tiles (database ki categories se khud bante hain) */
+/* category tiles */
 const qt=document.createElement("div");qt.className="qt";hero.after(qt);
-const em=n=>/sweat|hood/i.test(n)?"🧥":/shirt/i.test(n)?"👔":/sale/i.test(n)?"🏷":/new/i.test(n)?"✨":"🛍";
-function tiles(){const bs=[...document.querySelectorAll("#cats .cat")].slice(0,4);
- qt.innerHTML=bs.map((b,i)=>{const n=b.firstChild.textContent;return `<button type="button" data-i="${i}"><span>${em(n)}</span>${E(n)}</button>`}).join("");qt.style.display=bs.length?"":"none"}
-qt.onclick=e=>{const t=e.target.closest("[data-i]");if(!t)return;const b=document.querySelectorAll("#cats .cat")[+t.dataset.i];if(b){b.click();$("shopTop").scrollIntoView({behavior:"smooth"})}};
+const IC={shirt:'<path d="M8 4l-5 3 2 4 2-1v10h10V10l2 1 2-4-5-3c-.5 1.5-2 2.5-4 2.5S8.5 5.5 8 4z"/>',sweat:'<path d="M8 4l-5 3 1 6 3-.5V20h10v-7.5l3 .5 1-6-5-3c-.5 1.5-2 2.5-4 2.5S8.5 5.5 8 4z"/>',star:'<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',tag:'<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.3"/>',bag:'<path d="M5 8h14l-1 12H6z"/><path d="M9 8V6a3 3 0 016 0v2"/>'};
+const icFor=n=>/sweat|hood|wool/i.test(n)?"sweat":/shirt/i.test(n)?"shirt":/sale/i.test(n)?"tag":/new/i.test(n)?"star":"bag";
+function tiles(){if(typeof P=="undefined"||!P.length){qt.style.display="none";return}
+ const cs=cats().filter(c=>c!="All Products"&&c!="Sale").slice(0,2);
+ const T=[...cs.map(c=>[c,c]),["New Arrivals","All Products","n"],cats().includes("Sale")?["Sale","Sale"]:["All Products","All Products"]];
+ qt.innerHTML=T.map(([n,c,s])=>`<button type="button" data-tc="${E(c)}" data-ts="${s||""}"><svg viewBox="0 0 24 24">${IC[icFor(n)]}</svg>${E(n)}</button>`).join("");qt.style.display=""}
+qt.onclick=e=>{const t=e.target.closest("[data-tc]");if(!t)return;pick(t.dataset.tc);if(t.dataset.ts){$("sort").value=t.dataset.ts;$("sort").dispatchEvent(new Event("change"))}$("shopTop").scrollIntoView({behavior:"smooth"})};
 new MutationObserver(tiles).observe($("cats"),{childList:true});tiles();
+/* Category pictures (admin ki category-images.html se set hoti hain) */
+let CI={};
+(async()=>{try{if(typeof DB=="undefined"||!DB)return;const r=await DB.from("settings").select("key,value").like("key","cat_img:%");(r.data||[]).forEach(x=>{const u=String(x.value||"");if(/^(data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+\/=]+|https?:\/\/[^\s"'()]+)$/.test(u))CI[x.key.slice(8)]=u});if(typeof st!="undefined")window.list()}catch(e){}})();
 /* Categories page */
 const gv=document.createElement("div");gv.className="ov";gv.id="gov";gv.innerHTML='<div class="panel" id="gp"></div>';document.body.appendChild(gv);
 const pick=n=>{const b=[...document.querySelectorAll("#cats .cat")].find(x=>x.firstChild.textContent==n);if(b)b.click()};
 function openC(){const cs=cats().filter(c=>c!="All Products"&&c!="Sale").slice(0,2);
- const card=c=>{const p=P.find(x=>inCat(x,c));return `<div class="cc" data-gp="${E(c)}"><div class="im">${p?art(p,0):""}</div><div class="in"><b>${E(c)}</b><small>${P.filter(x=>inCat(x,c)).length} products</small><div style="margin-top:8px">View All →</div></div></div>`};
+ const card=c=>{const p=P.find(x=>inCat(x,c));return `<div class="cc" data-gp="${E(c)}"><div class="im">${CI[c]?`<img src="${E(CI[c])}" alt="">`:(p?art(p,0):"")}</div><div class="in"><b>${E(c)}</b><small>${P.filter(x=>inCat(x,c)).length} products</small><div style="margin-top:8px">View All →</div></div></div>`};
  const ex=(i,t,s,c,srt)=>`<button type="button" class="ex" data-gp="${E(c)}" data-gs="${srt||""}"><span style="font-size:26px">${i}</span><span style="flex:1"><b style="display:block">${t}</b><small style="color:var(--mut)">${s}</small></span>›</button>`;
  $("gp").innerHTML='<div class="pdh"><button class="x2" data-gc aria-label="Back">←</button><b>Categories</b><span style="width:40px"></span></div><div class="cb"><h3>Premium<br>Winter Collection</h3><p style="color:var(--mut);font-size:12px;margin-top:6px">Stay Warm, Stay Stylish</p></div><div class="cg">'+cs.map(card).join("")+'</div><h3 style="margin:20px 0 10px;font-size:18px">Explore More</h3>'+ex("✨","New Arrivals","Latest styles, just in","All Products","n")+ex("🔥","Best Sellers","Most loved by our customers","All Products")+ex("🏷","Sale","Premium quality, better prices",cats().includes("Sale")?"Sale":"All Products");
  gv.classList.add("show");setNav("cat")}
@@ -58,7 +67,8 @@ document.addEventListener("click",e=>{
  const t=e.target.closest("[data-gp]");if(t&&gv.contains(t)){const s=t.dataset.gs;gv.classList.remove("show");setNav("home");pick(t.dataset.gp);if(s){$("sort").value=s;$("sort").dispatchEvent(new Event("change"))}$("shopTop").scrollIntoView({behavior:"smooth"})}});
 /* Search */
 let q="";const L0=window.list;
-window.list=function(){L0();if(q){let n=0;document.querySelectorAll("#grid .card").forEach(c=>{const ok=c.querySelector(".pn").textContent.toLowerCase().includes(q);c.style.display=ok?"":"none";if(ok)n++});$("count").textContent=n+" products"}};
+function bn(){let b=$("cbn");if(!b){b=document.createElement("div");b.id="cbn";b.className="cb";$("grid").before(b)}if(st.cat=="All Products"){b.style.display="none";return}b.style.display="";b.style.background=CI[st.cat]?`linear-gradient(90deg,#0c0b0a 35%,rgba(12,11,10,.15)),url("${CI[st.cat]}") center/cover`:"";b.innerHTML=`<h3>${E(st.cat)}</h3><p style="color:var(--mut);font-size:12px;margin-top:6px">Soft. Warm. Everyday.</p>`}
+window.list=function(){L0();if(st.cat=="All Products")$("title").textContent="Top Picks";bn();if(q){let n=0;document.querySelectorAll("#grid .card").forEach(c=>{const ok=c.querySelector(".pn").textContent.toLowerCase().includes(q);c.style.display=ok?"":"none";if(ok)n++});$("count").textContent=n+" products"}};
 const sq=document.createElement("input");sq.id="sq";sq.type="text";sq.placeholder="Search products";sq.setAttribute("aria-label","Search products");$("fbtn").before(sq);
 sq.oninput=()=>{q=sq.value.trim().toLowerCase();window.list()};
 /* Product page */
