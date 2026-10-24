@@ -5,18 +5,20 @@
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   const note = (t, bad) => { try { message(t, bad); } catch { } };
 
-  function shrink(file) {
-    return new Promise((ok, no) => {
-      const u = URL.createObjectURL(file), im = new Image();
-      im.onload = () => {
-        const s = Math.min(1, 700 / Math.max(im.width, im.height)), c = document.createElement("canvas");
-        c.width = Math.round(im.width * s); c.height = Math.round(im.height * s);
-        c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
-        URL.revokeObjectURL(u); ok(c.toDataURL("image/jpeg", .8));
-      };
-      im.onerror = () => no(new Error("Photo khul nahi saki."));
-      im.src = u;
-    });
+  function toImage(src) {
+    return new Promise((ok, no) => { const im = new Image(); im.onload = () => ok(im); im.onerror = () => no(new Error("Photo khul nahi saki. Koi JPG ya PNG photo chunein.")); im.src = src; });
+  }
+  async function shrink(file) {
+    let im, url;
+    try { url = URL.createObjectURL(file); im = await toImage(url); }
+    catch (e) {
+      const data = await new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = () => no(new Error("Photo parh nahi saka.")); r.readAsDataURL(file); });
+      im = await toImage(data);
+    } finally { if (url) URL.revokeObjectURL(url); }
+    const s = Math.min(1, 700 / Math.max(im.width, im.height)), c = document.createElement("canvas");
+    c.width = Math.round(im.width * s); c.height = Math.round(im.height * s);
+    c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
+    return c.toDataURL("image/jpeg", .8);
   }
 
   function draw() {
@@ -53,7 +55,7 @@
   }
 
   document.addEventListener("click", async e => {
-    const t = e.target.closest("[data-view]");
+    const t = e.target.closest("[data-view]:not(section)");
     if (t) {
       if (t.dataset.view === "catpics") openTab();
       else { const v = document.querySelector('section.view[data-view="catpics"]'); if (v) v.classList.remove("on"); }
@@ -77,15 +79,22 @@
     }
   });
 
-  document.addEventListener("change", async e => {
-    const f = e.target.closest("[data-cf]");
-    if (!f || !f.files[0]) return;
+  async function onPick(e) {
+    const f = e.target.closest ? e.target.closest("[data-cf]") : null;
+    if (!f) return;
+    const file = f.files && f.files[0];
+    if (!file) { note("Photo input tak nahi pohnchi. Dobara chunein.", true); return; }
+    if (f._busy === file) return;
+    f._busy = file;
+    note("Photo mil gayi (" + Math.round(file.size / 1024) + " KB), tayyar ho rahi hai...");
     try {
-      const d = await shrink(f.files[0]), i = f.dataset.cf; pend[i] = d;
+      const d = await shrink(file), i = f.dataset.cf; pend[i] = d;
       g("cp-pv" + i).outerHTML = `<img class="cp-img" id="cp-pv${i}" src="${d}" alt="">`;
       note("Preview dekh lein, phir Save picture dabayein.");
-    } catch (x) { note(x.message, true); }
-  });
+    } catch (x) { note("Photo error: " + (x.message || x), true); }
+  }
+  document.addEventListener("change", onPick);
+  document.addEventListener("input", onPick);
 
   setTimeout(load, 1500);
 })();
