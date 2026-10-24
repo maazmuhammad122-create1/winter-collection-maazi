@@ -36,7 +36,8 @@
     try {
       const a = await D.from("products").select("category");
       if (a.error) throw a.error;
-      cats = [...new Set((a.data || []).map(p => String(p.category || "").trim()).filter(Boolean))];
+      const fromProducts = (a.data || []).map(p => String(p.category || "").trim()).filter(Boolean);
+      cats = [...new Set([...fromProducts, "New Arrivals", "Sale"])];
       const r = await D.from("settings").select("key,value").like("key", "cat_img:%");
       if (r.error) throw r.error;
       CI = {}; (r.data || []).forEach(x => CI[x.key.slice(8)] = x.value);
@@ -85,4 +86,6 @@
       note("Preview dekh lein, phir Save picture dabayein.");
     } catch (x) { note(x.message, true); }
   });
+
+  setTimeout(load, 1500);
 })();
