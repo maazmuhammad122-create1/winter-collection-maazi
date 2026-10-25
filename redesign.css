@@ -72,4 +72,11 @@ body{padding-bottom:78px}
 .sz3{display:flex;gap:6px;flex-wrap:wrap}
 .sz3 i{font-style:normal;border:1px solid var(--mut);border-radius:5px;font-size:10px;padding:3px 8px;color:var(--ink)}
 .sz3 i.off{opacity:.35;text-decoration:line-through}
-@media(max-width:800px){.card .order{display:none}.menu{display:none}}
+@media(max-width:800px){.menu{display:none}}
+
+/* product page: Add to Cart + heart side by side */
+.pbar{display:flex;gap:10px;align-items:stretch;margin-top:14px}
+.pbar .primary{flex:1;margin-top:0}
+.pbar .wh{position:static;width:54px;height:auto;border-radius:10px;border:1px solid var(--gold);background:none;color:var(--gold);font-size:22px}
+.sz2 .chip{background:var(--card)}
+.sz2 .chip.on{background:none;color:var(--gold);border-color:var(--gold)}
