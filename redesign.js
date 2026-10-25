@@ -83,7 +83,7 @@ window.open=function(id){const p=P.find(x=>String(x.id)==String(id));if(!p)retur
   <p style="margin:10px 0;color:var(--mut);line-height:1.6;white-space:pre-line">${E(p.desc)}</p>
   <div class="spec2">${p.cat?`<span>Category</span><b>${E(p.cat)}</b>`:""}${cols.length?`<span>Color</span><b>${E(cols.join(", "))}</b>`:""}</div>
   <b>Select Size</b><div class="sz2">${p.v.length?p.v.map(v=>`<button type="button" class="chip ${String(sel)==String(v.id)?"on":""}" data-z="${E(v.id)}" ${v.stock?"":"disabled"}>${E(vlabel(v))}</button>`).join(""):'<small style="color:var(--mut)">Currently unavailable</small>'}</div>${sv?`<small style="color:var(--mut)">${sv.stock} left</small>`:""}
-  <button class="primary" id="add">Add to Cart</button>`};
+  <div class="pbar"><button class="primary" id="add">Add to Cart</button><button type="button" class="wh" data-w="${E(p.id)}" aria-label="Wishlist">${heart(p.id)}</button></div>`};
  $("pp").onclick=e=>{const b=e.target.closest("button");if(!b)return;
   if(b.hasAttribute("data-pc"))$("pov").classList.remove("show");
   else if(b.hasAttribute("data-sh")){const d={title:p.name,url:location.href};navigator.share?navigator.share(d).catch(()=>{}):navigator.clipboard&&navigator.clipboard.writeText(d.url).then(()=>toast("Link copied"))}
