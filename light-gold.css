@@ -1,0 +1,79 @@
+/* light-gold.css — Maazi storefront (index.html only)
+   Light cream-gold page, dark black-gold header / hero / bottom bar, gold gradient headings,
+   categories always visible. Load it AFTER redesign.css:
+   <link rel="stylesheet" href="light-gold.css">
+   admin.html and order.html keep using style.css, so they do not change. */
+
+:root{color-scheme:light;--bg:#fffdf8;--card:#ffffff;--sand:#fbf5e3;--ink:#1b1b1f;--mut:#6b6a63;--line:#e8e0c8;--gold:#b8941f;--brown:#8f6a1a;--btnbg:linear-gradient(135deg,#e6c887,#b8893b);--btnfg:#15110a;--gtext:linear-gradient(135deg,#a37a32,#d4af37 50%,#8f6a2a);--lt:#f2e6c4;--lg:#e6c458}
+
+/* page background: soft white with gold glow */
+body{min-height:100vh;color:var(--ink);background-color:#fffdf8;background-image:radial-gradient(circle at 10% 6%,rgba(212,175,55,.16),transparent 42%),radial-gradient(circle at 90% 48%,rgba(212,175,55,.13),transparent 48%),radial-gradient(circle at 18% 92%,rgba(212,175,55,.12),transparent 44%),linear-gradient(180deg,#fffdf8,#f8f2de)}
+
+/* top bar: dark black + gold */
+header{background:linear-gradient(90deg,#0a0a0b,#1a1608 50%,#0a0a0b);border-bottom:2px solid #d4af37;color:var(--lt)}
+header .menu{background:#1a1a1d;border-color:#d4af37;color:var(--lg)}
+header .ic{color:var(--lt)}
+header .ic em{background:var(--lg);color:#15110a}
+.bt span{background:linear-gradient(135deg,#f6dea0,#d4af37 50%,#b8893b);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+
+/* hero: keep the photo, make text light and gold */
+.hero{color:var(--lt);border-color:#d4af37}
+.hx small{color:var(--lg)}
+.hx h1{background:linear-gradient(135deg,#f6dea0,#e6c458 50%,#c9a45c);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;padding-bottom:.08em}
+.hx p{color:var(--lt)}
+
+/* gold gradient headings on the light page */
+h2,aside h3{background:var(--gtext);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;padding-bottom:.08em}
+
+/* categories */
+.cat{border-radius:10px}
+.cat:hover{background:rgba(212,175,55,.12)}
+.cat.on,.cat.on:hover{background:var(--btnbg);color:#15110a}
+.qt button{background:#fff}
+
+/* filters + chips */
+.fbtn{background:#fff;border:1px solid var(--line)}
+.filters{background:#fff;border:1px solid var(--line)}
+.chip{background:#fff}
+.chip.on{background:var(--btnbg);border-color:#b8941f;color:#15110a}
+input[type=range]{accent-color:#b8941f}
+select,input[type=text],input[type=tel],textarea{background:#fff}
+.sz2 .chip.on{background:rgba(212,175,55,.15);color:var(--brown);border-color:#b8941f}
+
+/* product cards */
+.card{background:#fff;border:1px solid var(--line);transition:box-shadow .25s,border-color .25s}
+.card:hover{border-color:#d4af37;box-shadow:0 10px 28px -14px rgba(184,148,31,.5)}
+.price{color:var(--brown)}
+.order{border-color:#b8941f;color:#8f6a1a}
+.order.fill,.card .order{background:var(--btnbg);border-color:transparent;color:#15110a}
+.card .order:hover:not(:disabled){box-shadow:0 0 18px rgba(184,148,31,.45)}
+#grid .wh{color:var(--lt)}
+#grid .wh.on{color:var(--lg)}
+
+/* dark banners keep light text */
+.cb{color:var(--lt)}
+.cb p{color:#b9ad92!important}
+
+/* bottom bar (mobile): dark gold like the header */
+#bnav{background:linear-gradient(90deg,#0a0a0b,#1a1608 50%,#0a0a0b);border-top:2px solid #d4af37}
+#bnav button{color:#a79b82}
+#bnav button.on{color:var(--lg)}
+#bnav em{background:var(--lg)}
+
+/* panels, cart, checkout */
+.ov{background:rgba(20,16,6,.55)}
+.drawer{box-shadow:-12px 0 40px -18px rgba(0,0,0,.35)}
+.pay{background:#fffaf0}
+footer{background:linear-gradient(180deg,transparent,rgba(212,175,55,.1))}
+
+/* mobile: categories sit in front as a swipe row */
+@media(max-width:800px){
+  aside{position:static;transform:none;width:auto;background:none;border:0;padding:14px 14px 0;z-index:auto;transition:none}
+  aside h3{display:none}
+  #cats{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}
+  #cats::-webkit-scrollbar{display:none}
+  .cat{width:auto;flex:none;white-space:nowrap;gap:8px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:9px 16px;font-size:14px}
+  .cat.on{border-color:#b8941f}
+  #scrim,#scrim.show{display:none!important}
+  main{padding-top:14px}
+}
